@@ -1,0 +1,62 @@
+schema_version: "0.3.0"
+record_type: royalty_cell_contribution_claim
+
+claim_id: urn:royalty-contribution:kazene:royalty-cell-protocol:v0.3:validation
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+target:
+  target_id: urn:royalty-derivative:kazene:royalty-cell-protocol:v0.3
+  target_record_type: derivative_record
+  source_cell_id: urn:royalty-cell:kazene:royalty-lab
+  resolution_status: resolved
+  record_ref: examples/pass/royalty-cell-derivative-record.example.yaml
+
+contributor_ref: urn:royalty-cell-member:kazene:auditor
+
+contribution_type: validation
+claimed_significance: supporting
+
+description: >-
+  Reviewed the Derivative and Contribution schemas, added expected-failure
+  cases, and validated local record-resolution behavior.
+
+claim_status: recognized
+allocation_effect: contribution_evidence_only
+
+declared_at: "2026-07-25T09:10:00+09:00"
+
+contribution_period:
+  start_at: "2026-07-25T08:30:00+09:00"
+  end_at: "2026-07-25T09:00:00+09:00"
+
+scope_refs:
+  - urn:script:royalty-cell-protocol:validate-examples:v0.3
+  - urn:specification:royalty-cell-protocol:v0.3
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:contribution:v0.3:validation
+    evidence_type: repository_commit
+    evidence_ref: urn:repository:royalty-cell-protocol:commit:v0.3-validation
+    recorded_at: "2026-07-25T09:10:00+09:00"
+
+recognition:
+  status: recognized
+
+  recognized_by_refs:
+    - urn:royalty-cell-member:kazene:steward
+
+  decided_at: "2026-07-25T09:15:00+09:00"
+
+  rationale: >-
+    The contribution materially improved conformance testing and reduced
+    the risk of invalid local references.
+
+  recognized_significance: supporting
+
+  policy_ref: urn:royalty-policy:kazene:contribution-recognition:v1
+
+visibility: public
+
+extensions:
+  numeric_weight_assigned: false
+  settlement_deferred: true
