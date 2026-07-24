@@ -1,0 +1,451 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Royalty Cell Manifest",
+  "description": "Defines the identity, scope, governance, membership, recording policy, allocation-policy status, and interoperability settings of an autonomous Royalty Cell.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "cell_id",
+    "cell_name",
+    "description",
+    "status",
+    "created_at",
+    "updated_at",
+    "cell_scope",
+    "governance",
+    "membership",
+    "recording_policy",
+    "allocation_policy",
+    "interoperability"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "record_type": {
+      "const": "royalty_cell_manifest"
+    },
+    "cell_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$",
+      "description": "Globally distinguishable identifier for the Royalty Cell."
+    },
+    "cell_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "suspended",
+        "retired"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cell_scope": {
+      "$ref": "#/$defs/cellScope"
+    },
+    "governance": {
+      "$ref": "#/$defs/governance"
+    },
+    "membership": {
+      "$ref": "#/$defs/membership"
+    },
+    "recording_policy": {
+      "$ref": "#/$defs/recordingPolicy"
+    },
+    "allocation_policy": {
+      "$ref": "#/$defs/allocationPolicy"
+    },
+    "interoperability": {
+      "$ref": "#/$defs/interoperability"
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Implementation-specific metadata that does not alter the normative meaning of the manifest.",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "reference": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 500
+    },
+    "permission": {
+      "type": "string",
+      "enum": [
+        "register_origin",
+        "declare_usage",
+        "link_derivative",
+        "submit_contribution_claim",
+        "recognize_contribution",
+        "define_allocation_rule",
+        "issue_royalty_receipt",
+        "resolve_dispute",
+        "export_records",
+        "administer_cell"
+      ]
+    },
+    "evidenceType": {
+      "type": "string",
+      "enum": [
+        "content_hash",
+        "signed_statement",
+        "repository_commit",
+        "timestamped_record",
+        "publication_record",
+        "usage_log",
+        "execution_receipt",
+        "audit_record",
+        "external_reference",
+        "other"
+      ]
+    },
+    "settlementType": {
+      "type": "string",
+      "enum": [
+        "money",
+        "credit",
+        "point",
+        "attribution",
+        "access_right",
+        "governance_right",
+        "future_claim",
+        "community_fund"
+      ]
+    },
+    "cellScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope_type",
+        "domains",
+        "purpose"
+      ],
+      "properties": {
+        "scope_type": {
+          "type": "string",
+          "enum": [
+            "community",
+            "project",
+            "organization",
+            "agent_collective",
+            "research_group",
+            "other"
+          ]
+        },
+        "domains": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]*$"
+          }
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "jurisdictions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          }
+        },
+        "resource_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "authority_refs",
+        "decision_policy"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "steward_led",
+            "council",
+            "member_vote",
+            "consensus",
+            "external_policy"
+          ]
+        },
+        "authority_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "decision_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "approval_rule"
+          ],
+          "properties": {
+            "approval_rule": {
+              "type": "string",
+              "enum": [
+                "single_authority",
+                "simple_majority",
+                "supermajority",
+                "unanimous",
+                "external"
+              ]
+            },
+            "quorum": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            },
+            "policy_ref": {
+              "$ref": "#/$defs/reference"
+            }
+          }
+        },
+        "dispute_policy_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "membership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admission_mode",
+        "roles"
+      ],
+      "properties": {
+        "admission_mode": {
+          "type": "string",
+          "enum": [
+            "open",
+            "request",
+            "invite_only",
+            "closed"
+          ]
+        },
+        "admission_policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "role_id",
+              "name",
+              "permissions"
+            ],
+            "properties": {
+              "role_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9._-]*$"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "permissions": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "#/$defs/permission"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "recordingPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin_registration",
+        "usage_declaration",
+        "evidence_requirement",
+        "visibility",
+        "retention"
+      ],
+      "properties": {
+        "origin_registration": {
+          "type": "string",
+          "enum": [
+            "open",
+            "role_restricted",
+            "authority_only"
+          ]
+        },
+        "usage_declaration": {
+          "type": "string",
+          "enum": [
+            "self_reported",
+            "role_restricted",
+            "authority_only"
+          ]
+        },
+        "evidence_requirement": {
+          "type": "string",
+          "enum": [
+            "optional",
+            "required",
+            "policy_defined"
+          ]
+        },
+        "accepted_evidence_types": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/evidenceType"
+          }
+        },
+        "evidence_policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "visibility": {
+          "type": "string",
+          "enum": [
+            "public",
+            "members",
+            "restricted",
+            "mixed"
+          ]
+        },
+        "retention": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode"
+          ],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "indefinite",
+                "fixed_period",
+                "external_policy"
+              ]
+            },
+            "duration_days": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "policy_ref": {
+              "$ref": "#/$defs/reference"
+            }
+          }
+        }
+      }
+    },
+    "allocationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "allowed_settlement_types"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_configured",
+            "internal",
+            "external"
+          ]
+        },
+        "policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "allowed_settlement_types": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/settlementType"
+          }
+        }
+      }
+    },
+    "interoperability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "export_enabled",
+        "canonical_id_namespace",
+        "record_formats"
+      ],
+      "properties": {
+        "export_enabled": {
+          "type": "boolean"
+        },
+        "canonical_id_namespace": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 500
+        },
+        "profile_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "record_formats": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "yaml",
+              "json",
+              "ndjson"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
