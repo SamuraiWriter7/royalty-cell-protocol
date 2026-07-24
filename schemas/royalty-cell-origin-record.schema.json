@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://royalty-cell-protocol.example/schemas/royalty-cell-origin-record.schema.json",
+  "title": "Royalty Cell Origin Record",
+  "description": "Records an origin claim inside a Royalty Cell without determining final legal ownership.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "origin_id",
+    "cell_id",
+    "title",
+    "description",
+    "origin_type",
+    "claimant_refs",
+    "claim_basis",
+    "claim_effect",
+    "claim_status",
+    "declared_at",
+    "evidence",
+    "visibility"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.2.0"
+    },
+    "record_type": {
+      "const": "royalty_cell_origin_record"
+    },
+    "origin_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-origin:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "cell_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5000
+    },
+    "origin_type": {
+      "type": "string",
+      "enum": [
+        "concept",
+        "question",
+        "framework",
+        "method",
+        "specification",
+        "protocol",
+        "code",
+        "dataset",
+        "model",
+        "prompt",
+        "design",
+        "text",
+        "image",
+        "audio",
+        "video",
+        "other"
+      ]
+    },
+    "claimant_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "claim_basis": {
+      "type": "string",
+      "enum": [
+        "self_declaration",
+        "timestamped_publication",
+        "repository_history",
+        "signed_statement",
+        "external_registry",
+        "imported_record"
+      ]
+    },
+    "claim_effect": {
+      "const": "claim_record_only",
+      "description": "Confirms that the record is an origin claim and not a final legal ownership judgment."
+    },
+    "claim_status": {
+      "type": "string",
+      "enum": [
+        "declared",
+        "acknowledged",
+        "contested",
+        "withdrawn",
+        "superseded"
+      ]
+    },
+    "origin_created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "declared_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "content_fingerprint": {
+      "$ref": "#/$defs/contentFingerprint"
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "precedence_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "usage_policy_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "imported_from_ref": {
+      "$ref": "#/$defs/reference"
+    },
+    "contest_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "superseded_by_ref": {
+      "$ref": "#/$defs/reference"
+    },
+    "status_reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "members",
+        "restricted",
+        "inherit"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "reference": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 1000
+    },
+    "contentFingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "value"
+      ],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": [
+            "sha256",
+            "sha512",
+            "blake3",
+            "other"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 512
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "evidence_type",
+        "evidence_ref",
+        "recorded_at"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-evidence:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "evidence_type": {
+          "type": "string",
+          "enum": [
+            "content_hash",
+            "signed_statement",
+            "repository_commit",
+            "timestamped_record",
+            "publication_record",
+            "usage_log",
+            "execution_receipt",
+            "audit_record",
+            "external_reference",
+            "other"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "digest": {
+          "$ref": "#/$defs/contentFingerprint"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      }
+    }
+  }
+}
