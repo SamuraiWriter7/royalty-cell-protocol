@@ -1,0 +1,52 @@
+schema_version: "0.2.0"
+record_type: royalty_cell_usage_record
+
+usage_id: urn:royalty-usage:kazene:missing-origin-test
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+declarant_ref: urn:royalty-cell-member:kazene:steward
+declaration_basis: self_reported
+
+usage_status: declared
+usage_type: reference
+
+purpose: >-
+  Test rejection of a locally resolved Origin that does not exist among
+  the local passing Origin records.
+
+declared_at: "2026-07-25T07:30:00+09:00"
+
+origin_links:
+  - origin_id: urn:royalty-origin:kazene:nonexistent-origin
+    source_cell_id: urn:royalty-cell:kazene:royalty-lab
+    relationship: referenced
+    dependency_level: primary
+    resolution_status: resolved
+    notes: >-
+      This Origin is intentionally absent from the local passing examples.
+
+usage_scope:
+  audience: cell_members
+  commerciality: noncommercial
+
+  channels:
+    - protocol-testing
+
+authorization:
+  status: pending
+  reason: >-
+    Authorization cannot be resolved because the declared local Origin
+    record does not exist.
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:missing-origin:test
+    evidence_type: signed_statement
+    evidence_ref: urn:statement:kazene:missing-origin-test
+    recorded_at: "2026-07-25T07:30:00+09:00"
+    description: >-
+      Intentional invalid example for testing local Origin resolution.
+
+visibility: members
+
+extensions:
+  expected_failure: missing_local_origin
