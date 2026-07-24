@@ -1,0 +1,309 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://royalty-cell-protocol.example/schemas/royalty-cell-contribution-weight-resolution.schema.json",
+  "title": "Royalty Cell Contribution Weight Resolution",
+  "description": "Resolves recognized Contribution Claims into normalized allocation weights without executing allocation or settlement.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "resolution_id",
+    "cell_id",
+    "target",
+    "method",
+    "resolution_status",
+    "assignments",
+    "normalization",
+    "allocation_effect",
+    "declared_at",
+    "evidence",
+    "visibility"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.4.0"
+    },
+    "record_type": {
+      "const": "royalty_cell_contribution_weight_resolution"
+    },
+    "resolution_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-weight-resolution:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "cell_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "equal_weight",
+        "fixed_policy",
+        "score_normalization",
+        "consensus",
+        "external"
+      ]
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "finalized",
+        "revoked"
+      ]
+    },
+    "assignments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/assignment"
+      }
+    },
+    "normalization": {
+      "$ref": "#/$defs/normalization"
+    },
+    "decision": {
+      "$ref": "#/$defs/decision"
+    },
+    "allocation_effect": {
+      "const": "weight_resolution_only"
+    },
+    "declared_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revoked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revocation_reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3000
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "members",
+        "restricted",
+        "inherit"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "reference": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 1000
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_id",
+        "target_record_type",
+        "source_cell_id",
+        "resolution_status"
+      ],
+      "properties": {
+        "target_id": {
+          "$ref": "#/$defs/reference"
+        },
+        "target_record_type": {
+          "type": "string",
+          "enum": [
+            "derivative_record",
+            "project",
+            "output",
+            "value_event",
+            "other"
+          ]
+        },
+        "source_cell_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "resolution_status": {
+          "type": "string",
+          "enum": [
+            "resolved",
+            "externally_resolved",
+            "unresolved"
+          ]
+        },
+        "record_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assignment_id",
+        "contribution_claim_ref",
+        "source_cell_id",
+        "resolution_status",
+        "contributor_ref",
+        "normalized_weight"
+      ],
+      "properties": {
+        "assignment_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "contribution_claim_ref": {
+          "type": "string",
+          "pattern": "^urn:royalty-contribution:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "source_cell_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "resolution_status": {
+          "type": "string",
+          "enum": [
+            "resolved",
+            "externally_resolved",
+            "unresolved"
+          ]
+        },
+        "record_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "contributor_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "raw_score": {
+          "type": "number",
+          "minimum": 0
+        },
+        "normalized_weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    },
+    "normalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basis",
+        "precision",
+        "tolerance"
+      ],
+      "properties": {
+        "basis": {
+          "const": "sum_to_one"
+        },
+        "precision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 12
+        },
+        "tolerance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.01
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "decided_by_refs",
+        "decided_at",
+        "policy_ref",
+        "rationale"
+      ],
+      "properties": {
+        "decided_by_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "decided_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        },
+        "external_result_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "evidence_type",
+        "evidence_ref",
+        "recorded_at"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-evidence:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "evidence_type": {
+          "type": "string",
+          "enum": [
+            "signed_statement",
+            "repository_commit",
+            "timestamped_record",
+            "audit_record",
+            "calculation_record",
+            "external_reference",
+            "other"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    }
+  }
+}
