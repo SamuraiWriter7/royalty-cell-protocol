@@ -1,0 +1,30 @@
+schema_version: "0.2.0"
+record_type: royalty_cell_origin_record
+
+origin_id: urn:royalty-origin:kazene:obsolete-cell-concept
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+title: Obsolete Royalty Cell Concept
+
+description: >-
+  An intentionally invalid Origin Record that declares itself superseded
+  without identifying the succeeding Origin.
+
+origin_type: concept
+
+claimant_refs:
+  - urn:royalty-cell-member:kazene:steward
+
+claim_basis: self_declaration
+claim_effect: claim_record_only
+claim_status: superseded
+
+declared_at: "2026-07-25T07:20:00+09:00"
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:obsolete-cell:self-declaration
+    evidence_type: signed_statement
+    evidence_ref: urn:statement:kazene:obsolete-cell
+    recorded_at: "2026-07-25T07:20:00+09:00"
+
+visibility: members
