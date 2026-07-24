@@ -1,0 +1,56 @@
+schema_version: "0.5.0"
+record_type: royalty_cell_holdback_record
+
+holdback_id: urn:royalty-holdback:kazene:total-mismatch
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+dispute:
+  dispute_id: urn:royalty-dispute:kazene:open-creator:mapping:v0.5
+  source_cell_id: urn:royalty-cell:kazene:royalty-lab
+  resolution_status: resolved
+
+allocation_plan:
+  allocation_plan_id: urn:royalty-allocation-plan:kazene:royalty-cell-protocol:v0.4
+  source_cell_id: urn:royalty-cell:kazene:royalty-lab
+  resolution_status: resolved
+
+allocation_line_id: steward-allocation
+beneficiary_ref: urn:royalty-cell-member:kazene:steward
+
+unit:
+  kind: currency
+  code: JPY
+  decimals: 0
+
+held_units: 7200
+released_units: 3000
+remaining_held_units: 5000
+
+holdback_status: partially_released
+
+hold_reason: Intentionally invalid Holdback arithmetic.
+
+imposed_by_refs:
+  - urn:royalty-cell-member:kazene:auditor
+
+created_at: "2026-07-25T13:40:00+09:00"
+imposed_at: "2026-07-25T13:40:00+09:00"
+
+release_events:
+  - release_id: partial-release
+    released_units: 3000
+    released_at: "2026-07-25T13:45:00+09:00"
+    released_by_refs:
+      - urn:royalty-cell-member:kazene:auditor
+    reason: Partial release test.
+    evidence_ref: urn:release:kazene:partial-test
+
+holdback_effect: settlement_hold_only
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:holdback-total-mismatch
+    evidence_type: hold_order
+    evidence_ref: urn:hold-order:kazene:total-mismatch
+    recorded_at: "2026-07-25T13:40:00+09:00"
+
+visibility: restricted
