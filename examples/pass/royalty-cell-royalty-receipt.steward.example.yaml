@@ -1,0 +1,46 @@
+schema_version: "0.4.0"
+record_type: royalty_cell_royalty_receipt
+
+receipt_id: urn:royalty-receipt:kazene:royalty-cell-protocol:v0.4:steward
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+allocation_plan:
+  allocation_plan_id: urn:royalty-allocation-plan:kazene:royalty-cell-protocol:v0.4
+  source_cell_id: urn:royalty-cell:kazene:royalty-lab
+  resolution_status: resolved
+  record_ref: examples/pass/royalty-cell-allocation-plan.example.yaml
+
+allocation_line_id: steward-allocation
+beneficiary_ref: urn:royalty-cell-member:kazene:steward
+
+settlement_type: money
+
+unit:
+  kind: currency
+  code: JPY
+  decimals: 0
+
+allocated_units: 7200
+settled_units: 7200
+balance_remaining_units: 0
+
+settlement_status: settled
+receipt_effect: settlement_record_only
+
+issued_at: "2026-07-25T10:20:00+09:00"
+settled_at: "2026-07-25T10:18:00+09:00"
+
+settlement_evidence:
+  - evidence_id: urn:royalty-evidence:kazene:receipt:v0.4:steward
+    evidence_type: ledger_entry
+    evidence_ref: urn:ledger:kazene:settlement:v0.4:steward
+    recorded_at: "2026-07-25T10:18:00+09:00"
+    description: Completed settlement of the steward Allocation line.
+
+attribution:
+  status: provided
+  display_text: >-
+    Foundational protocol design contribution by Shidenkai Alpha.
+  target_ref: urn:royalty-contribution:kazene:royalty-cell-protocol:v0.3:design
+
+visibility: public
