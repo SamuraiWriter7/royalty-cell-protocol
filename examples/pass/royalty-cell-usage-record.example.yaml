@@ -1,0 +1,75 @@
+schema_version: "0.2.0"
+record_type: royalty_cell_usage_record
+
+usage_id: urn:royalty-usage:kazene:royalty-cell-protocol:v0.2
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+declarant_ref: urn:royalty-cell-member:kazene:steward
+declaration_basis: self_reported
+
+usage_status: completed
+usage_type: specification
+
+purpose: >-
+  Use the Royalty Cell concept as the foundation for version 0.2 of the
+  Royalty Cell Protocol, including Origin and Usage record schemas.
+
+occurred_at: "2026-07-25T07:00:00+09:00"
+declared_at: "2026-07-25T07:10:00+09:00"
+
+origin_links:
+  - origin_id: urn:royalty-origin:kazene:royalty-cell-concept
+    source_cell_id: urn:royalty-cell:kazene:royalty-lab
+    relationship: transformed
+    dependency_level: primary
+    resolution_status: resolved
+    record_ref: examples/pass/royalty-cell-origin-record.example.yaml
+    notes: >-
+      The concept is transformed into machine-readable schemas and
+      validation rules.
+
+usage_scope:
+  audience: public
+  commerciality: noncommercial
+
+  territories:
+    - global
+
+  channels:
+    - github
+    - documentation
+
+authorization:
+  status: granted
+  authorization_ref: urn:authorization:kazene:royalty-cell-protocol:v0.2
+  terms_ref: urn:royalty-policy:kazene:origin-use:v1
+  decision_recorded_at: "2026-07-25T06:55:00+09:00"
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:usage:v0.2:repository
+    evidence_type: repository_commit
+    evidence_ref: urn:repository:royalty-cell-protocol:commit:v0.2
+    recorded_at: "2026-07-25T07:10:00+09:00"
+    description: >-
+      Repository record containing the Origin and Usage schemas.
+
+  - evidence_id: urn:royalty-evidence:kazene:usage:v0.2:declaration
+    evidence_type: signed_statement
+    evidence_ref: urn:statement:kazene:royalty-cell-protocol:v0.2
+    recorded_at: "2026-07-25T07:10:00+09:00"
+
+attribution:
+  status: provided
+  display_text: >-
+    Royalty Cell concept originated by Shidenkai Alpha.
+  target_ref: urn:royalty-origin:kazene:royalty-cell-concept
+
+output_refs:
+  - urn:repository:royalty-cell-protocol:v0.2
+  - urn:schema:royalty-cell-origin-record:v0.2
+  - urn:schema:royalty-cell-usage-record:v0.2
+
+visibility: public
+
+extensions:
+  royalty_settlement_deferred: true
