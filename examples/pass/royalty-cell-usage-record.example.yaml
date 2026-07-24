@@ -8,7 +8,7 @@ declarant_ref: urn:royalty-cell-member:kazene:steward
 declaration_basis: self_reported
 
 usage_status: completed
-usage_type: specification
+usage_type: transformation
 
 purpose: >-
   Use the Royalty Cell concept as the foundation for version 0.2 of the
@@ -72,4 +72,5 @@ output_refs:
 visibility: public
 
 extensions:
+  output_type: specification
   royalty_settlement_deferred: true
