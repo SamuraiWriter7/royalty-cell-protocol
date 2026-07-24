@@ -1,0 +1,333 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://royalty-cell-protocol.example/schemas/royalty-cell-holdback-record.schema.json",
+  "title": "Royalty Cell Holdback Record",
+  "description": "Temporarily holds allocable or settleable units while a related dispute or review remains unresolved.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "holdback_id",
+    "cell_id",
+    "dispute",
+    "allocation_plan",
+    "allocation_line_id",
+    "beneficiary_ref",
+    "unit",
+    "held_units",
+    "released_units",
+    "remaining_held_units",
+    "holdback_status",
+    "hold_reason",
+    "holdback_effect",
+    "created_at",
+    "evidence",
+    "visibility"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.5.0"
+    },
+    "record_type": {
+      "const": "royalty_cell_holdback_record"
+    },
+    "holdback_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-holdback:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "cell_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "dispute": {
+      "$ref": "#/$defs/disputeRef"
+    },
+    "allocation_plan": {
+      "$ref": "#/$defs/allocationPlanRef"
+    },
+    "allocation_line_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._-]*$"
+    },
+    "beneficiary_ref": {
+      "$ref": "#/$defs/reference"
+    },
+    "unit": {
+      "$ref": "#/$defs/unit"
+    },
+    "held_units": {
+      "type": "number",
+      "minimum": 0
+    },
+    "released_units": {
+      "type": "number",
+      "minimum": 0
+    },
+    "remaining_held_units": {
+      "type": "number",
+      "minimum": 0
+    },
+    "holdback_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "partially_released",
+        "released",
+        "cancelled"
+      ]
+    },
+    "hold_reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5000
+    },
+    "imposed_by_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "imposed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cancelled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cancellation_reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3000
+    },
+    "release_events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/releaseEvent"
+      }
+    },
+    "related_receipt_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "holdback_effect": {
+      "const": "settlement_hold_only"
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "members",
+        "restricted"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "reference": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 1000
+    },
+    "unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "code",
+        "decimals"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "currency",
+            "point",
+            "credit",
+            "attribution",
+            "access_right",
+            "governance_right",
+            "future_claim",
+            "other"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z0-9][A-Z0-9._-]{0,31}$"
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        }
+      }
+    },
+    "disputeRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dispute_id",
+        "source_cell_id",
+        "resolution_status"
+      ],
+      "properties": {
+        "dispute_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-dispute:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "source_cell_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "resolution_status": {
+          "type": "string",
+          "enum": [
+            "resolved",
+            "externally_resolved",
+            "unresolved"
+          ]
+        },
+        "record_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "allocationPlanRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allocation_plan_id",
+        "source_cell_id",
+        "resolution_status"
+      ],
+      "properties": {
+        "allocation_plan_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-allocation-plan:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "source_cell_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "resolution_status": {
+          "type": "string",
+          "enum": [
+            "resolved",
+            "externally_resolved",
+            "unresolved"
+          ]
+        },
+        "record_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "releaseEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_id",
+        "released_units",
+        "released_at",
+        "released_by_refs",
+        "reason",
+        "evidence_ref"
+      ],
+      "properties": {
+        "release_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "released_units": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "released_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "released_by_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "evidence_type",
+        "evidence_ref",
+        "recorded_at"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-evidence:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "evidence_type": {
+          "type": "string",
+          "enum": [
+            "hold_order",
+            "release_order",
+            "dispute_record",
+            "allocation_snapshot",
+            "ledger_entry",
+            "external_reference",
+            "other"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        }
+      }
+    }
+  }
+}
