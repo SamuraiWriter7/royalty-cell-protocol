@@ -1,0 +1,100 @@
+schema_version: "0.5.0"
+record_type: royalty_cell_dispute_record
+
+dispute_id: urn:royalty-dispute:kazene:open-creator:mapping:v0.5
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+dispute_type: interoperability_mapping
+
+filed_by_refs:
+  - urn:royalty-cell-member:kazene:steward
+
+respondent_refs:
+  - urn:remote-member:open-creator:steward
+
+contested_refs:
+  - record_type: interoperability_link
+    record_id: urn:royalty-cell-link:kazene:open-creator-cell:v0.5
+    source_cell_id: urn:royalty-cell:kazene:royalty-lab
+    resolution_status: resolved
+    record_ref: examples/pass/royalty-cell-interoperability-link.example.yaml
+
+    contested_field_paths:
+      - identifier_mappings[0].relationship
+      - identifier_mappings[0].confidence
+
+claim_summary: >-
+  The initial mapping classified the remote structure as fully equivalent
+  to the local Royalty Cell concept. The available evidence supports a
+  derived-from relationship, but not full equivalence.
+
+requested_remedies:
+  - correct_record
+  - release_hold
+  - provide_attribution
+
+dispute_status: decided
+
+reviewer_refs:
+  - urn:royalty-cell-member:kazene:auditor
+  - urn:remote-member:open-creator:reviewer
+
+decision:
+  outcome: partially_upheld
+
+  decided_by_refs:
+    - urn:royalty-cell-member:kazene:auditor
+    - urn:remote-member:open-creator:reviewer
+
+  decided_at: "2026-07-25T12:30:00+09:00"
+
+  policy_refs:
+    - urn:royalty-policy:kazene:dispute:v1
+    - urn:royalty-profile:cross-cell-origin:v1
+
+  rationale: >-
+    The remote record has a documented structural dependency on the local
+    Origin, but the evidence does not establish complete equivalence.
+    The relationship must remain derived_from and the confidence must
+    remain declared until independent verification is completed.
+
+  remedy_actions:
+    - action_id: retain-derived-relationship
+      action_type: correct_record
+      target_ref: urn:royalty-cell-link:kazene:open-creator-cell:v0.5
+      action_status: completed
+      execution_ref: urn:record-update:kazene:interop-link:v0.5
+
+    - action_id: release-temporary-hold
+      action_type: release_hold
+      target_ref: urn:royalty-holdback:kazene:open-creator:mapping:v0.5
+      action_status: completed
+      execution_ref: urn:holdback-release:kazene:v0.5
+
+    - action_id: preserve-attribution
+      action_type: provide_attribution
+      target_ref: urn:royalty-origin:kazene:royalty-cell-concept
+      action_status: required
+
+holdback_refs:
+  - urn:royalty-holdback:kazene:open-creator:mapping:v0.5
+
+dispute_effect: dispute_record_only
+
+filed_at: "2026-07-25T12:00:00+09:00"
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:dispute:mapping:v0.5
+    evidence_type: record_snapshot
+    evidence_ref: urn:snapshot:kazene:interop-link:pre-decision:v0.5
+    recorded_at: "2026-07-25T12:00:00+09:00"
+
+  - evidence_id: urn:royalty-evidence:kazene:dispute:communication:v0.5
+    evidence_type: communication_record
+    evidence_ref: urn:communication:kazene:open-creator:mapping:v0.5
+    recorded_at: "2026-07-25T12:15:00+09:00"
+
+visibility: public
+
+extensions:
+  external_legal_claim_created: false
