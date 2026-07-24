@@ -1,0 +1,444 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://royalty-cell-protocol.example/schemas/royalty-cell-allocation-plan.schema.json",
+  "title": "Royalty Cell Allocation Plan",
+  "description": "Applies a finalized Contribution Weight Resolution to a declared value event and produces beneficiary allocation lines.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "allocation_plan_id",
+    "cell_id",
+    "source_value_event",
+    "weight_resolution",
+    "plan_status",
+    "deductions",
+    "distributable_units",
+    "allocations",
+    "rounding",
+    "allocation_effect",
+    "created_at",
+    "evidence",
+    "visibility"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.4.0"
+    },
+    "record_type": {
+      "const": "royalty_cell_allocation_plan"
+    },
+    "allocation_plan_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-allocation-plan:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "cell_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "source_value_event": {
+      "$ref": "#/$defs/valueEvent"
+    },
+    "weight_resolution": {
+      "$ref": "#/$defs/weightResolutionRef"
+    },
+    "plan_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "approved",
+        "partially_executed",
+        "executed",
+        "cancelled"
+      ]
+    },
+    "deductions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/deduction"
+      }
+    },
+    "distributable_units": {
+      "type": "number",
+      "minimum": 0
+    },
+    "allocations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/allocationLine"
+      }
+    },
+    "rounding": {
+      "$ref": "#/$defs/rounding"
+    },
+    "approval": {
+      "$ref": "#/$defs/approval"
+    },
+    "allocation_effect": {
+      "const": "allocation_plan_only"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cancelled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cancellation_reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3000
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "members",
+        "restricted",
+        "inherit"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "reference": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 1000
+    },
+    "unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "code",
+        "decimals"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "currency",
+            "point",
+            "credit",
+            "attribution",
+            "access_right",
+            "governance_right",
+            "future_claim",
+            "other"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z0-9][A-Z0-9._-]{0,31}$"
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        }
+      }
+    },
+    "valueEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "event_type",
+        "occurred_at",
+        "gross_units",
+        "unit",
+        "source_refs"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-value-event:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "event_type": {
+          "type": "string",
+          "enum": [
+            "sale",
+            "license",
+            "subscription",
+            "service_fee",
+            "grant",
+            "donation",
+            "cost_saving",
+            "point_issuance",
+            "credit_issuance",
+            "rights_grant",
+            "other"
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "gross_units": {
+          "type": "number",
+          "minimum": 0
+        },
+        "unit": {
+          "$ref": "#/$defs/unit"
+        },
+        "source_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "weightResolutionRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resolution_id",
+        "source_cell_id",
+        "resolution_status"
+      ],
+      "properties": {
+        "resolution_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-weight-resolution:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "source_cell_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "resolution_status": {
+          "type": "string",
+          "enum": [
+            "resolved",
+            "externally_resolved",
+            "unresolved"
+          ]
+        },
+        "record_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "deduction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deduction_id",
+        "deduction_type",
+        "units",
+        "policy_ref"
+      ],
+      "properties": {
+        "deduction_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "deduction_type": {
+          "type": "string",
+          "enum": [
+            "platform_cost",
+            "tax",
+            "community_fund",
+            "reserve",
+            "refund",
+            "other"
+          ]
+        },
+        "units": {
+          "type": "number",
+          "minimum": 0
+        },
+        "recipient_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    },
+    "allocationLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allocation_line_id",
+        "beneficiary_ref",
+        "contribution_claim_refs",
+        "applied_weight",
+        "allocated_units",
+        "settlement_type"
+      ],
+      "properties": {
+        "allocation_line_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "beneficiary_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "contribution_claim_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^urn:royalty-contribution:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+          }
+        },
+        "applied_weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "allocated_units": {
+          "type": "number",
+          "minimum": 0
+        },
+        "settlement_type": {
+          "type": "string",
+          "enum": [
+            "money",
+            "credit",
+            "point",
+            "attribution",
+            "access_right",
+            "governance_right",
+            "future_claim"
+          ]
+        },
+        "restrictions_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    },
+    "rounding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "precision",
+        "tolerance"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "nearest",
+            "down",
+            "up",
+            "largest_remainder"
+          ]
+        },
+        "precision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        },
+        "tolerance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approved_by_refs",
+        "approved_at",
+        "policy_ref",
+        "rationale"
+      ],
+      "properties": {
+        "approved_by_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "approved_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 5000
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "evidence_type",
+        "evidence_ref",
+        "recorded_at"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-evidence:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "evidence_type": {
+          "type": "string",
+          "enum": [
+            "calculation_record",
+            "approval_record",
+            "ledger_entry",
+            "audit_record",
+            "external_reference",
+            "other"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    }
+  }
+}
