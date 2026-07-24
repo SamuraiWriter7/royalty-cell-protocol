@@ -1,0 +1,35 @@
+schema_version: "0.3.0"
+record_type: royalty_cell_contribution_claim
+
+claim_id: urn:royalty-contribution:kazene:missing-recognition-decision
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+target:
+  target_id: urn:royalty-derivative:kazene:royalty-cell-protocol:v0.3
+  target_record_type: derivative_record
+  source_cell_id: urn:royalty-cell:kazene:royalty-lab
+  resolution_status: resolved
+  record_ref: examples/pass/royalty-cell-derivative-record.example.yaml
+
+contributor_ref: urn:royalty-cell-member:kazene:steward
+
+contribution_type: protocol_design
+claimed_significance: major
+
+description: >-
+  An intentionally invalid claim marked as recognized without a recognition
+  decision.
+
+claim_status: recognized
+
+allocation_effect: contribution_evidence_only
+
+declared_at: "2026-07-25T08:50:00+09:00"
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:missing-recognition:test
+    evidence_type: signed_statement
+    evidence_ref: urn:statement:kazene:missing-recognition-test
+    recorded_at: "2026-07-25T08:50:00+09:00"
+
+visibility: members
