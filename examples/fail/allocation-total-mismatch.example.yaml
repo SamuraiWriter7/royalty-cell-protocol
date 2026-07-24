@@ -1,0 +1,74 @@
+schema_version: "0.4.0"
+record_type: royalty_cell_allocation_plan
+
+allocation_plan_id: urn:royalty-allocation-plan:kazene:invalid-total
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+source_value_event:
+  event_id: urn:royalty-value-event:kazene:invalid-total
+  event_type: license
+  occurred_at: "2026-07-25T10:40:00+09:00"
+  gross_units: 10000
+
+  unit:
+    kind: currency
+    code: JPY
+    decimals: 0
+
+  source_refs:
+    - urn:license:kazene:invalid-total
+
+weight_resolution:
+  resolution_id: urn:royalty-weight-resolution:kazene:royalty-cell-protocol:v0.4
+  source_cell_id: urn:royalty-cell:kazene:royalty-lab
+  resolution_status: resolved
+
+plan_status: approved
+
+deductions:
+  - deduction_id: community-fund
+    deduction_type: community_fund
+    units: 1000
+    policy_ref: urn:royalty-policy:kazene:community-fund:v1
+
+distributable_units: 9000
+
+allocations:
+  - allocation_line_id: steward-allocation
+    beneficiary_ref: urn:royalty-cell-member:kazene:steward
+    contribution_claim_refs:
+      - urn:royalty-contribution:kazene:royalty-cell-protocol:v0.3:design
+    applied_weight: 0.8
+    allocated_units: 7000
+    settlement_type: money
+
+  - allocation_line_id: auditor-allocation
+    beneficiary_ref: urn:royalty-cell-member:kazene:auditor
+    contribution_claim_refs:
+      - urn:royalty-contribution:kazene:royalty-cell-protocol:v0.3:validation
+    applied_weight: 0.2
+    allocated_units: 1000
+    settlement_type: money
+
+rounding:
+  mode: largest_remainder
+  precision: 0
+  tolerance: 0.000001
+
+approval:
+  approved_by_refs:
+    - urn:royalty-cell-member:kazene:steward
+  approved_at: "2026-07-25T10:45:00+09:00"
+  policy_ref: urn:royalty-policy:kazene:allocation:v1
+  rationale: Intentionally invalid allocation total.
+
+allocation_effect: allocation_plan_only
+created_at: "2026-07-25T10:45:00+09:00"
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:invalid-allocation-total
+    evidence_type: calculation_record
+    evidence_ref: urn:calculation:kazene:invalid-allocation-total
+    recorded_at: "2026-07-25T10:45:00+09:00"
+
+visibility: members
