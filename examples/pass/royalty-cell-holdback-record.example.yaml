@@ -1,0 +1,77 @@
+schema_version: "0.5.0"
+record_type: royalty_cell_holdback_record
+
+holdback_id: urn:royalty-holdback:kazene:open-creator:mapping:v0.5
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+dispute:
+  dispute_id: urn:royalty-dispute:kazene:open-creator:mapping:v0.5
+  source_cell_id: urn:royalty-cell:kazene:royalty-lab
+  resolution_status: resolved
+  record_ref: examples/pass/royalty-cell-dispute-record.example.yaml
+
+allocation_plan:
+  allocation_plan_id: urn:royalty-allocation-plan:kazene:royalty-cell-protocol:v0.4
+  source_cell_id: urn:royalty-cell:kazene:royalty-lab
+  resolution_status: resolved
+  record_ref: examples/pass/royalty-cell-allocation-plan.example.yaml
+
+allocation_line_id: steward-allocation
+beneficiary_ref: urn:royalty-cell-member:kazene:steward
+
+unit:
+  kind: currency
+  code: JPY
+  decimals: 0
+
+held_units: 7200
+released_units: 7200
+remaining_held_units: 0
+
+holdback_status: released
+
+hold_reason: >-
+  Settlement was temporarily held while the cross-Cell Origin mapping
+  and required attribution were reviewed.
+
+imposed_by_refs:
+  - urn:royalty-cell-member:kazene:auditor
+
+created_at: "2026-07-25T12:05:00+09:00"
+imposed_at: "2026-07-25T12:10:00+09:00"
+released_at: "2026-07-25T12:35:00+09:00"
+
+release_events:
+  - release_id: release-after-mapping-decision
+    released_units: 7200
+    released_at: "2026-07-25T12:35:00+09:00"
+
+    released_by_refs:
+      - urn:royalty-cell-member:kazene:auditor
+
+    reason: >-
+      The dispute decision preserved attribution and corrected the mapping,
+      removing the basis for the temporary Holdback.
+
+    evidence_ref: urn:holdback-release:kazene:v0.5
+
+related_receipt_refs:
+  - urn:royalty-receipt:kazene:royalty-cell-protocol:v0.4:steward
+
+holdback_effect: settlement_hold_only
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:holdback:order:v0.5
+    evidence_type: hold_order
+    evidence_ref: urn:hold-order:kazene:open-creator:v0.5
+    recorded_at: "2026-07-25T12:10:00+09:00"
+
+  - evidence_id: urn:royalty-evidence:kazene:holdback:release:v0.5
+    evidence_type: release_order
+    evidence_ref: urn:holdback-release:kazene:v0.5
+    recorded_at: "2026-07-25T12:35:00+09:00"
+
+visibility: public
+
+extensions:
+  forfeiture_created: false
