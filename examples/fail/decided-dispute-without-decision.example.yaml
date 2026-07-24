@@ -1,0 +1,38 @@
+schema_version: "0.5.0"
+record_type: royalty_cell_dispute_record
+
+dispute_id: urn:royalty-dispute:kazene:missing-decision
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+dispute_type: interoperability_mapping
+
+filed_by_refs:
+  - urn:royalty-cell-member:kazene:steward
+
+respondent_refs:
+  - urn:remote-member:open-creator:steward
+
+contested_refs:
+  - record_type: interoperability_link
+    record_id: urn:royalty-cell-link:kazene:open-creator-cell:v0.5
+    source_cell_id: urn:royalty-cell:kazene:royalty-lab
+    resolution_status: resolved
+
+claim_summary: >-
+  Intentionally invalid dispute marked as decided without a decision.
+
+requested_remedies:
+  - correct_record
+
+dispute_status: decided
+dispute_effect: dispute_record_only
+
+filed_at: "2026-07-25T13:20:00+09:00"
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:missing-decision
+    evidence_type: signed_statement
+    evidence_ref: urn:statement:kazene:missing-decision
+    recorded_at: "2026-07-25T13:20:00+09:00"
+
+visibility: members
