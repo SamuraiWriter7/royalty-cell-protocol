@@ -1,0 +1,53 @@
+schema_version: "0.5.0"
+record_type: royalty_cell_interoperability_link
+
+link_id: urn:royalty-cell-link:kazene:self-link
+local_cell_id: urn:royalty-cell:kazene:royalty-lab
+
+remote_cell:
+  cell_id: urn:royalty-cell:kazene:royalty-lab
+  canonical_namespace: urn:royalty-cell:kazene:royalty-lab
+  manifest_ref: examples/pass/royalty-cell-manifest.example.yaml
+
+link_status: draft
+trust_mode: declarative
+
+profile_refs:
+  - urn:civilization-os-profile:royalty-cell:v0.5
+
+identifier_mappings:
+  - mapping_id: self-origin
+    local_record_type: origin_record
+    local_id: urn:royalty-origin:kazene:royalty-cell-concept
+    local_resolution_status: resolved
+    remote_record_type: origin_record
+    remote_id: urn:royalty-origin:kazene:royalty-cell-concept
+    remote_resolution_status: externally_resolved
+    remote_record_ref: examples/pass/royalty-cell-origin-record.example.yaml
+    relationship: equivalent_to
+    mapping_status: active
+    confidence: declared
+
+record_exchange:
+  direction: bidirectional
+  formats:
+    - yaml
+  permitted_record_types:
+    - origin_record
+  visibility_ceiling: public
+
+policy_compatibility:
+  status: compatible
+  local_policy_refs: []
+  remote_policy_refs: []
+
+link_effect: interoperability_record_only
+created_at: "2026-07-25T13:00:00+09:00"
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:self-link
+    evidence_type: signed_statement
+    evidence_ref: urn:statement:kazene:self-link
+    recorded_at: "2026-07-25T13:00:00+09:00"
+
+visibility: members
