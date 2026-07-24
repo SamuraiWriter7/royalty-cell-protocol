@@ -1,0 +1,32 @@
+schema_version: "0.4.0"
+record_type: royalty_cell_royalty_receipt
+
+receipt_id: urn:royalty-receipt:kazene:beneficiary-mismatch
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+allocation_plan:
+  allocation_plan_id: urn:royalty-allocation-plan:kazene:royalty-cell-protocol:v0.4
+  source_cell_id: urn:royalty-cell:kazene:royalty-lab
+  resolution_status: resolved
+
+allocation_line_id: steward-allocation
+
+beneficiary_ref: urn:royalty-cell-member:kazene:auditor
+
+settlement_type: money
+
+unit:
+  kind: currency
+  code: JPY
+  decimals: 0
+
+allocated_units: 7200
+settled_units: 0
+balance_remaining_units: 7200
+
+settlement_status: pending
+receipt_effect: settlement_record_only
+
+issued_at: "2026-07-25T11:00:00+09:00"
+
+visibility: restricted
