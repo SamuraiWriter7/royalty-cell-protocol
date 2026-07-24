@@ -1,0 +1,52 @@
+schema_version: "0.4.0"
+record_type: royalty_cell_contribution_weight_resolution
+
+resolution_id: urn:royalty-weight-resolution:kazene:invalid-weight-sum
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+target:
+  target_id: urn:royalty-derivative:kazene:royalty-cell-protocol:v0.3
+  target_record_type: derivative_record
+  source_cell_id: urn:royalty-cell:kazene:royalty-lab
+  resolution_status: resolved
+
+method: score_normalization
+resolution_status: finalized
+
+assignments:
+  - assignment_id: design
+    contribution_claim_ref: urn:royalty-contribution:kazene:royalty-cell-protocol:v0.3:design
+    source_cell_id: urn:royalty-cell:kazene:royalty-lab
+    resolution_status: resolved
+    contributor_ref: urn:royalty-cell-member:kazene:steward
+    normalized_weight: 0.7
+
+  - assignment_id: validation
+    contribution_claim_ref: urn:royalty-contribution:kazene:royalty-cell-protocol:v0.3:validation
+    source_cell_id: urn:royalty-cell:kazene:royalty-lab
+    resolution_status: resolved
+    contributor_ref: urn:royalty-cell-member:kazene:auditor
+    normalized_weight: 0.2
+
+normalization:
+  basis: sum_to_one
+  precision: 6
+  tolerance: 0.000001
+
+decision:
+  decided_by_refs:
+    - urn:royalty-cell-member:kazene:steward
+  decided_at: "2026-07-25T10:30:00+09:00"
+  policy_ref: urn:royalty-policy:kazene:contribution-weight:v1
+  rationale: Intentionally invalid finalized resolution.
+
+allocation_effect: weight_resolution_only
+declared_at: "2026-07-25T10:30:00+09:00"
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:invalid-weight-sum
+    evidence_type: calculation_record
+    evidence_ref: urn:calculation:kazene:invalid-weight-sum
+    recorded_at: "2026-07-25T10:30:00+09:00"
+
+visibility: members
