@@ -1,0 +1,56 @@
+schema_version: "0.2.0"
+record_type: royalty_cell_origin_record
+
+origin_id: urn:royalty-origin:kazene:royalty-cell-concept
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+title: Royalty Cell
+
+description: >-
+  A minimum autonomous value-circulation unit in which a community,
+  project, organization, or agent collective records Origins, Usages,
+  derivatives, contributions, allocation policies, and Royalty receipts
+  under locally governed rules.
+
+origin_type: concept
+
+claimant_refs:
+  - urn:royalty-cell-member:kazene:steward
+
+claim_basis: timestamped_publication
+claim_effect: claim_record_only
+claim_status: declared
+
+origin_created_at: "2026-07-24T01:23:03+09:00"
+declared_at: "2026-07-25T06:30:00+09:00"
+
+content_fingerprint:
+  algorithm: sha256
+  value: 7ad073067807e004551ee6d2fbd0e305e63e33283bfee7ff71ec958707ae3312
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:royalty-cell-concept:publication
+    evidence_type: publication_record
+    evidence_ref: urn:publication:kazene:royalty-cell-concept
+    recorded_at: "2026-07-25T06:30:00+09:00"
+    description: >-
+      Timestamped publication describing the Royalty Cell as the minimum
+      autonomous unit of a bottom-up Royalty OS.
+
+  - evidence_id: urn:royalty-evidence:kazene:royalty-cell-concept:repository
+    evidence_type: repository_commit
+    evidence_ref: urn:repository:royalty-cell-protocol:commit:v0.2-origin
+    recorded_at: "2026-07-25T06:35:00+09:00"
+
+precedence_refs:
+  - urn:royalty-origin:kazene:royalty-os
+  - urn:royalty-origin:kazene:origin-derivative-audit-royalty
+
+usage_policy_refs:
+  - urn:royalty-policy:kazene:origin-use:v1
+
+visibility: public
+
+extensions:
+  language: ja
+  implementation_stage: experimental
