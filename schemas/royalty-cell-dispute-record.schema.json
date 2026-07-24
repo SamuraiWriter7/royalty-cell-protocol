@@ -1,0 +1,390 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://royalty-cell-protocol.example/schemas/royalty-cell-dispute-record.schema.json",
+  "title": "Royalty Cell Dispute Record",
+  "description": "Records a dispute concerning Origin, Usage, Derivative, Contribution, Allocation, Settlement, interoperability, or policy compatibility.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "dispute_id",
+    "cell_id",
+    "dispute_type",
+    "filed_by_refs",
+    "respondent_refs",
+    "contested_refs",
+    "claim_summary",
+    "requested_remedies",
+    "dispute_status",
+    "dispute_effect",
+    "filed_at",
+    "evidence",
+    "visibility"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.5.0"
+    },
+    "record_type": {
+      "const": "royalty_cell_dispute_record"
+    },
+    "dispute_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-dispute:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "cell_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "dispute_type": {
+      "type": "string",
+      "enum": [
+        "origin_priority",
+        "authorization",
+        "usage",
+        "derivative_relationship",
+        "contribution_recognition",
+        "weight_resolution",
+        "allocation",
+        "settlement",
+        "interoperability_mapping",
+        "policy_conflict",
+        "other"
+      ]
+    },
+    "filed_by_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "respondent_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "contested_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/contestedReference"
+      }
+    },
+    "claim_summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8000
+    },
+    "requested_remedies": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "correct_record",
+          "revoke_record",
+          "recognize_contribution",
+          "recalculate_weight",
+          "amend_allocation",
+          "hold_settlement",
+          "release_hold",
+          "reverse_settlement",
+          "provide_attribution",
+          "provide_compensation",
+          "mediation",
+          "other"
+        ]
+      }
+    },
+    "dispute_status": {
+      "type": "string",
+      "enum": [
+        "filed",
+        "under_review",
+        "mediation",
+        "decided",
+        "dismissed",
+        "withdrawn",
+        "escalated"
+      ]
+    },
+    "reviewer_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "decision": {
+      "$ref": "#/$defs/decision"
+    },
+    "holdback_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "dispute_effect": {
+      "const": "dispute_record_only"
+    },
+    "filed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "withdrawn_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "escalated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "escalation_ref": {
+      "$ref": "#/$defs/reference"
+    },
+    "status_reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3000
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "members",
+        "restricted"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "reference": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 1000
+    },
+    "disputableRecordType": {
+      "type": "string",
+      "enum": [
+        "origin_record",
+        "usage_record",
+        "derivative_record",
+        "contribution_claim",
+        "weight_resolution",
+        "allocation_plan",
+        "royalty_receipt",
+        "interoperability_link",
+        "policy",
+        "other"
+      ]
+    },
+    "contestedReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record_type",
+        "record_id",
+        "source_cell_id",
+        "resolution_status"
+      ],
+      "properties": {
+        "record_type": {
+          "$ref": "#/$defs/disputableRecordType"
+        },
+        "record_id": {
+          "$ref": "#/$defs/reference"
+        },
+        "source_cell_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "resolution_status": {
+          "type": "string",
+          "enum": [
+            "resolved",
+            "externally_resolved",
+            "unresolved"
+          ]
+        },
+        "record_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "contested_field_paths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "decided_by_refs",
+        "decided_at",
+        "policy_refs",
+        "rationale",
+        "remedy_actions"
+      ],
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "upheld",
+            "partially_upheld",
+            "rejected",
+            "dismissed",
+            "settled"
+          ]
+        },
+        "decided_by_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "decided_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "policy_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8000
+        },
+        "remedy_actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/remedyAction"
+          }
+        }
+      }
+    },
+    "remedyAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action_id",
+        "action_type",
+        "target_ref",
+        "action_status"
+      ],
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "action_type": {
+          "type": "string",
+          "enum": [
+            "correct_record",
+            "revoke_record",
+            "recognize_contribution",
+            "recalculate_weight",
+            "amend_allocation",
+            "hold_settlement",
+            "release_hold",
+            "reverse_settlement",
+            "provide_attribution",
+            "provide_compensation",
+            "no_action",
+            "other"
+          ]
+        },
+        "target_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "action_status": {
+          "type": "string",
+          "enum": [
+            "required",
+            "completed",
+            "rejected",
+            "deferred"
+          ]
+        },
+        "execution_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "evidence_type",
+        "evidence_ref",
+        "recorded_at"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-evidence:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "evidence_type": {
+          "type": "string",
+          "enum": [
+            "signed_statement",
+            "record_snapshot",
+            "audit_record",
+            "calculation_record",
+            "communication_record",
+            "external_reference",
+            "other"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        }
+      }
+    }
+  }
+}
