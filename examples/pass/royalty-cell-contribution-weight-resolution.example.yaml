@@ -1,0 +1,70 @@
+schema_version: "0.4.0"
+record_type: royalty_cell_contribution_weight_resolution
+
+resolution_id: urn:royalty-weight-resolution:kazene:royalty-cell-protocol:v0.4
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+target:
+  target_id: urn:royalty-derivative:kazene:royalty-cell-protocol:v0.3
+  target_record_type: derivative_record
+  source_cell_id: urn:royalty-cell:kazene:royalty-lab
+  resolution_status: resolved
+  record_ref: examples/pass/royalty-cell-derivative-record.example.yaml
+
+method: score_normalization
+resolution_status: finalized
+
+assignments:
+  - assignment_id: protocol-design
+    contribution_claim_ref: urn:royalty-contribution:kazene:royalty-cell-protocol:v0.3:design
+    source_cell_id: urn:royalty-cell:kazene:royalty-lab
+    resolution_status: resolved
+    record_ref: examples/pass/royalty-cell-contribution-claim.example.yaml
+    contributor_ref: urn:royalty-cell-member:kazene:steward
+    raw_score: 80
+    normalized_weight: 0.8
+    notes: Foundational protocol architecture and specification design.
+
+  - assignment_id: protocol-validation
+    contribution_claim_ref: urn:royalty-contribution:kazene:royalty-cell-protocol:v0.3:validation
+    source_cell_id: urn:royalty-cell:kazene:royalty-lab
+    resolution_status: resolved
+    record_ref: examples/pass/royalty-cell-contribution-claim.validation.example.yaml
+    contributor_ref: urn:royalty-cell-member:kazene:auditor
+    raw_score: 20
+    normalized_weight: 0.2
+    notes: Conformance testing, review, and validation work.
+
+normalization:
+  basis: sum_to_one
+  precision: 6
+  tolerance: 0.000001
+
+decision:
+  decided_by_refs:
+    - urn:royalty-cell-member:kazene:steward
+    - urn:royalty-cell-member:kazene:auditor
+
+  decided_at: "2026-07-25T09:30:00+09:00"
+
+  policy_ref: urn:royalty-policy:kazene:contribution-weight:v1
+
+  rationale: >-
+    Scores were assigned according to foundational design responsibility
+    and validation scope, then normalized to a total weight of one.
+
+allocation_effect: weight_resolution_only
+
+declared_at: "2026-07-25T09:35:00+09:00"
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:weight-resolution:v0.4
+    evidence_type: calculation_record
+    evidence_ref: urn:calculation:kazene:royalty-cell-protocol:v0.4:weights
+    recorded_at: "2026-07-25T09:35:00+09:00"
+    description: Raw contribution scores and normalized weight calculation.
+
+visibility: public
+
+extensions:
+  allocation_plan_created: true
