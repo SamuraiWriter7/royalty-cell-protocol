@@ -1,0 +1,72 @@
+schema_version: "0.3.0"
+record_type: royalty_cell_contribution_claim
+
+claim_id: urn:royalty-contribution:kazene:royalty-cell-protocol:v0.3:design
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+target:
+  target_id: urn:royalty-derivative:kazene:royalty-cell-protocol:v0.3
+  target_record_type: derivative_record
+  source_cell_id: urn:royalty-cell:kazene:royalty-lab
+  resolution_status: resolved
+  record_ref: examples/pass/royalty-cell-derivative-record.example.yaml
+
+contributor_ref: urn:royalty-cell-member:kazene:steward
+
+contribution_type: protocol_design
+claimed_significance: foundational
+
+description: >-
+  Designed the Royalty Cell structure, separated Derivative records from
+  Contribution Claims, and defined the semantic boundary between recognition,
+  allocation, and settlement.
+
+claim_status: recognized
+
+allocation_effect: contribution_evidence_only
+
+declared_at: "2026-07-25T08:20:00+09:00"
+
+contribution_period:
+  start_at: "2026-07-25T07:45:00+09:00"
+  end_at: "2026-07-25T08:10:00+09:00"
+
+scope_refs:
+  - urn:schema:royalty-cell-derivative-record:v0.3
+  - urn:schema:royalty-cell-contribution-claim:v0.3
+  - urn:specification:royalty-cell-protocol:v0.3
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:contribution:v0.3:commit
+    evidence_type: repository_commit
+    evidence_ref: urn:repository:royalty-cell-protocol:commit:v0.3
+    recorded_at: "2026-07-25T08:20:00+09:00"
+    description: >-
+      Repository history showing the protocol design and specification work.
+
+  - evidence_id: urn:royalty-evidence:kazene:contribution:v0.3:statement
+    evidence_type: signed_statement
+    evidence_ref: urn:statement:kazene:royalty-cell-protocol:v0.3:design
+    recorded_at: "2026-07-25T08:20:00+09:00"
+
+recognition:
+  status: recognized
+
+  recognized_by_refs:
+    - urn:royalty-cell-member:kazene:steward
+
+  decided_at: "2026-07-25T08:25:00+09:00"
+
+  rationale: >-
+    The contribution established the core architecture and normative
+    separation required for version 0.3.
+
+  recognized_significance: foundational
+
+  policy_ref: urn:royalty-policy:kazene:contribution-recognition:v1
+
+visibility: public
+
+extensions:
+  numeric_weight_assigned: false
+  settlement_deferred: true
