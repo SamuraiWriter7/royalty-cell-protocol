@@ -1,0 +1,75 @@
+schema_version: "0.3.0"
+record_type: royalty_cell_derivative_record
+
+derivative_id: urn:royalty-derivative:kazene:royalty-cell-protocol:v0.3
+cell_id: urn:royalty-cell:kazene:royalty-lab
+
+title: Royalty Cell Protocol v0.3
+
+description: >-
+  A machine-readable protocol implementation derived from the Royalty Cell
+  concept and extended with Derivative and Contribution Claim records.
+
+derivative_type: implementation
+derivative_status: declared
+
+creator_refs:
+  - urn:royalty-cell-member:kazene:steward
+
+created_at: "2026-07-25T07:55:00+09:00"
+declared_at: "2026-07-25T08:10:00+09:00"
+
+parent_links:
+  - source_id: urn:royalty-origin:kazene:royalty-cell-concept
+    source_record_type: origin_record
+    source_cell_id: urn:royalty-cell:kazene:royalty-lab
+    relationship: implemented_from
+    dependency_level: primary
+    resolution_status: resolved
+    record_ref: examples/pass/royalty-cell-origin-record.example.yaml
+    notes: >-
+      The conceptual Royalty Cell structure is implemented as JSON Schemas,
+      normative specifications, examples, and validation rules.
+
+transformation_profile:
+  operations:
+    - implementation
+    - expansion
+    - format_change
+
+  derivative_distance: substantial
+
+  method_ref: urn:royalty-method:kazene:protocol-specification:v1
+
+  novelty_notes: >-
+    The conceptual model is expanded into separate Derivative and
+    Contribution records with machine-verifiable semantic constraints.
+
+allocation_effect: not_yet_determined
+
+usage_refs:
+  - urn:royalty-usage:kazene:royalty-cell-protocol:v0.2
+
+output_refs:
+  - urn:repository:royalty-cell-protocol:v0.3
+  - urn:schema:royalty-cell-derivative-record:v0.3
+  - urn:schema:royalty-cell-contribution-claim:v0.3
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:derivative:v0.3:repository
+    evidence_type: repository_commit
+    evidence_ref: urn:repository:royalty-cell-protocol:commit:v0.3
+    recorded_at: "2026-07-25T08:10:00+09:00"
+    description: >-
+      Repository commit containing the Derivative and Contribution schemas.
+
+  - evidence_id: urn:royalty-evidence:kazene:derivative:v0.3:specification
+    evidence_type: publication_record
+    evidence_ref: specs/derivative-and-contribution-records.md
+    recorded_at: "2026-07-25T08:10:00+09:00"
+
+visibility: public
+
+extensions:
+  implementation_stage: experimental
+  royalty_allocation_deferred: true
