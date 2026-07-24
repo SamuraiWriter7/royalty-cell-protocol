@@ -1,0 +1,58 @@
+schema_version: "0.1.0"
+record_type: royalty_cell_manifest
+
+cell_id: urn:royalty-cell:example:no-admin
+cell_name: No Administrator Cell
+
+description: >-
+  An intentionally invalid manifest with no role permitted to administer
+  the Royalty Cell.
+
+status: draft
+
+created_at: "2026-07-25T05:00:00+09:00"
+updated_at: "2026-07-25T05:00:00+09:00"
+
+cell_scope:
+  scope_type: project
+  domains:
+    - protocol-testing
+  purpose: Test rejection of a manifest without a Cell administrator.
+
+governance:
+  mode: steward_led
+  authority_refs:
+    - urn:royalty-cell-member:example:steward
+  decision_policy:
+    approval_rule: single_authority
+
+membership:
+  admission_mode: open
+
+  roles:
+    - role_id: contributor
+      name: Contributor
+      permissions:
+        - register_origin
+        - declare_usage
+        - link_derivative
+        - submit_contribution_claim
+
+recording_policy:
+  origin_registration: open
+  usage_declaration: self_reported
+  evidence_requirement: optional
+  visibility: public
+  retention:
+    mode: indefinite
+
+allocation_policy:
+  status: not_configured
+  allowed_settlement_types:
+    - attribution
+
+interoperability:
+  export_enabled: true
+  canonical_id_namespace: urn:royalty-cell:example:no-admin
+  record_formats:
+    - yaml
