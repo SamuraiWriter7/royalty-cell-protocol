@@ -1,0 +1,424 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://royalty-cell-protocol.example/schemas/royalty-cell-interoperability-link.schema.json",
+  "title": "Royalty Cell Interoperability Link",
+  "description": "Defines a controlled interoperability relationship between two independently governed Royalty Cells.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "link_id",
+    "local_cell_id",
+    "remote_cell",
+    "link_status",
+    "trust_mode",
+    "profile_refs",
+    "identifier_mappings",
+    "record_exchange",
+    "policy_compatibility",
+    "link_effect",
+    "created_at",
+    "evidence",
+    "visibility"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.5.0"
+    },
+    "record_type": {
+      "const": "royalty_cell_interoperability_link"
+    },
+    "link_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-cell-link:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "local_cell_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "remote_cell": {
+      "$ref": "#/$defs/remoteCell"
+    },
+    "link_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "suspended",
+        "retired"
+      ]
+    },
+    "trust_mode": {
+      "type": "string",
+      "enum": [
+        "unverified",
+        "declarative",
+        "verified",
+        "federated"
+      ]
+    },
+    "profile_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "identifier_mappings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/identifierMapping"
+      }
+    },
+    "record_exchange": {
+      "$ref": "#/$defs/recordExchange"
+    },
+    "policy_compatibility": {
+      "$ref": "#/$defs/policyCompatibility"
+    },
+    "activation_override_ref": {
+      "$ref": "#/$defs/reference"
+    },
+    "link_effect": {
+      "const": "interoperability_record_only"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "activated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "suspended_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "retired_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status_reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3000
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "members",
+        "restricted"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "reference": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 1000
+    },
+    "remoteCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cell_id",
+        "canonical_namespace",
+        "manifest_ref"
+      ],
+      "properties": {
+        "cell_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "canonical_namespace": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 1000
+        },
+        "manifest_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "operator_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        }
+      }
+    },
+    "identifierMapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mapping_id",
+        "local_record_type",
+        "local_id",
+        "local_resolution_status",
+        "remote_record_type",
+        "remote_id",
+        "remote_resolution_status",
+        "relationship",
+        "mapping_status",
+        "confidence"
+      ],
+      "properties": {
+        "mapping_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9._-]*$"
+        },
+        "local_record_type": {
+          "$ref": "#/$defs/mappableRecordType"
+        },
+        "local_id": {
+          "$ref": "#/$defs/reference"
+        },
+        "local_resolution_status": {
+          "type": "string",
+          "enum": [
+            "resolved",
+            "unresolved"
+          ]
+        },
+        "local_record_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "remote_record_type": {
+          "$ref": "#/$defs/mappableRecordType"
+        },
+        "remote_id": {
+          "$ref": "#/$defs/reference"
+        },
+        "remote_resolution_status": {
+          "type": "string",
+          "enum": [
+            "externally_resolved",
+            "unresolved"
+          ]
+        },
+        "remote_record_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "relationship": {
+          "type": "string",
+          "enum": [
+            "equivalent_to",
+            "alias_of",
+            "mirrors",
+            "derived_from",
+            "supersedes",
+            "conflicts_with"
+          ]
+        },
+        "mapping_status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "suspended",
+            "revoked"
+          ]
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "declared",
+            "verified",
+            "disputed"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        }
+      }
+    },
+    "mappableRecordType": {
+      "type": "string",
+      "enum": [
+        "origin_record",
+        "usage_record",
+        "derivative_record",
+        "contribution_claim",
+        "weight_resolution",
+        "allocation_plan",
+        "royalty_receipt",
+        "policy",
+        "other"
+      ]
+    },
+    "recordExchange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "direction",
+        "formats",
+        "permitted_record_types",
+        "visibility_ceiling"
+      ],
+      "properties": {
+        "direction": {
+          "type": "string",
+          "enum": [
+            "import",
+            "export",
+            "bidirectional"
+          ]
+        },
+        "formats": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "yaml",
+              "json",
+              "ndjson"
+            ]
+          }
+        },
+        "permitted_record_types": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/mappableRecordType"
+          }
+        },
+        "visibility_ceiling": {
+          "type": "string",
+          "enum": [
+            "public",
+            "members",
+            "restricted"
+          ]
+        },
+        "export_policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "import_policy_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "resolver_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "policyCompatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "local_policy_refs",
+        "remote_policy_refs"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "compatible",
+            "adapter_required",
+            "conflict",
+            "unassessed"
+          ]
+        },
+        "local_policy_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "remote_policy_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "adapter_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "conflict_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "assessment_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "evidence_type",
+        "evidence_ref",
+        "recorded_at"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-evidence:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "evidence_type": {
+          "type": "string",
+          "enum": [
+            "signed_statement",
+            "manifest_snapshot",
+            "compatibility_assessment",
+            "audit_record",
+            "adapter_record",
+            "external_reference",
+            "other"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    }
+  }
+}
