@@ -1,0 +1,105 @@
+schema_version: "0.5.0"
+record_type: royalty_cell_interoperability_link
+
+link_id: urn:royalty-cell-link:kazene:open-creator-cell:v0.5
+
+local_cell_id: urn:royalty-cell:kazene:royalty-lab
+
+remote_cell:
+  cell_id: urn:royalty-cell:open-creator:commons
+  canonical_namespace: urn:royalty-cell:open-creator:commons
+  manifest_ref: urn:remote-manifest:open-creator:commons:v1
+
+  operator_refs:
+    - urn:remote-member:open-creator:steward
+
+link_status: active
+trust_mode: declarative
+
+profile_refs:
+  - urn:civilization-os-profile:royalty-cell:v0.5
+  - urn:royalty-profile:cross-cell-origin:v1
+
+identifier_mappings:
+  - mapping_id: royalty-cell-concept
+
+    local_record_type: origin_record
+    local_id: urn:royalty-origin:kazene:royalty-cell-concept
+    local_resolution_status: resolved
+    local_record_ref: examples/pass/royalty-cell-origin-record.example.yaml
+
+    remote_record_type: origin_record
+    remote_id: urn:royalty-origin:open-creator:autonomous-royalty-node
+    remote_resolution_status: externally_resolved
+    remote_record_ref: urn:remote-record:open-creator:autonomous-royalty-node
+
+    relationship: derived_from
+    mapping_status: active
+    confidence: declared
+
+    evidence_refs:
+      - urn:royalty-evidence:kazene:interop:mapping:v0.5
+
+    notes: >-
+      The remote autonomous royalty node explicitly cites the local
+      Royalty Cell concept as a structural predecessor.
+
+record_exchange:
+  direction: bidirectional
+
+  formats:
+    - yaml
+    - json
+
+  permitted_record_types:
+    - origin_record
+    - usage_record
+    - derivative_record
+    - contribution_claim
+    - royalty_receipt
+
+  visibility_ceiling: public
+
+  export_policy_ref: urn:royalty-policy:kazene:cross-cell-export:v1
+  import_policy_ref: urn:royalty-policy:kazene:cross-cell-import:v1
+  resolver_ref: urn:royalty-resolver:kazene:v1
+
+policy_compatibility:
+  status: compatible
+
+  local_policy_refs:
+    - urn:royalty-policy:kazene:origin-use:v1
+    - urn:royalty-policy:kazene:allocation:v1
+
+  remote_policy_refs:
+    - urn:remote-policy:open-creator:origin-use:v1
+    - urn:remote-policy:open-creator:allocation:v1
+
+  assessment_ref: urn:compatibility-assessment:kazene:open-creator:v1
+
+link_effect: interoperability_record_only
+
+created_at: "2026-07-25T11:30:00+09:00"
+activated_at: "2026-07-25T11:45:00+09:00"
+
+evidence:
+  - evidence_id: urn:royalty-evidence:kazene:interop:manifest:v0.5
+    evidence_type: manifest_snapshot
+    evidence_ref: urn:remote-manifest:open-creator:commons:v1
+    recorded_at: "2026-07-25T11:30:00+09:00"
+
+  - evidence_id: urn:royalty-evidence:kazene:interop:mapping:v0.5
+    evidence_type: signed_statement
+    evidence_ref: urn:statement:open-creator:royalty-cell-citation:v1
+    recorded_at: "2026-07-25T11:35:00+09:00"
+
+  - evidence_id: urn:royalty-evidence:kazene:interop:compatibility:v0.5
+    evidence_type: compatibility_assessment
+    evidence_ref: urn:compatibility-assessment:kazene:open-creator:v1
+    recorded_at: "2026-07-25T11:40:00+09:00"
+
+visibility: public
+
+extensions:
+  automatic_import_enabled: false
+  human_review_required: true
