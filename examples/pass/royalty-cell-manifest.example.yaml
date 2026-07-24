@@ -1,0 +1,125 @@
+schema_version: "0.1.0"
+record_type: royalty_cell_manifest
+
+cell_id: urn:royalty-cell:kazene:royalty-lab
+cell_name: Kazene Royalty Lab
+
+description: >-
+  A bottom-up Royalty Cell for recording conceptual origins, declared usages,
+  derivative structures, contribution recognition, and voluntary returns
+  within the Kazene protocol community.
+
+status: active
+
+created_at: "2026-07-25T05:00:00+09:00"
+updated_at: "2026-07-25T05:00:00+09:00"
+
+cell_scope:
+  scope_type: community
+
+  domains:
+    - ai-governance
+    - creator-economy
+    - protocol-design
+
+  purpose: >-
+    Test locally governed methods for recording origins and voluntary
+    value returns without treating registration as final legal ownership.
+
+  jurisdictions:
+    - JP
+
+  resource_refs:
+    - urn:repository:royalty-cell-protocol
+    - urn:protocol:civilization-os-interoperability-profile
+
+governance:
+  mode: steward_led
+
+  authority_refs:
+    - urn:royalty-cell-member:kazene:steward
+
+  decision_policy:
+    approval_rule: single_authority
+
+  dispute_policy_ref: urn:royalty-policy:kazene:dispute:v1
+
+membership:
+  admission_mode: request
+
+  admission_policy_ref: urn:royalty-policy:kazene:membership:v1
+
+  roles:
+    - role_id: steward
+      name: Cell Steward
+      description: Maintains the manifest and approves Cell-level policies.
+      permissions:
+        - register_origin
+        - declare_usage
+        - link_derivative
+        - submit_contribution_claim
+        - recognize_contribution
+        - define_allocation_rule
+        - issue_royalty_receipt
+        - resolve_dispute
+        - export_records
+        - administer_cell
+
+    - role_id: contributor
+      name: Contributor
+      description: Registers origins and declares usages and contributions.
+      permissions:
+        - register_origin
+        - declare_usage
+        - link_derivative
+        - submit_contribution_claim
+
+    - role_id: auditor
+      name: Community Auditor
+      description: Reviews evidence and recognizes contribution claims.
+      permissions:
+        - recognize_contribution
+        - resolve_dispute
+        - export_records
+
+recording_policy:
+  origin_registration: role_restricted
+  usage_declaration: self_reported
+  evidence_requirement: required
+
+  accepted_evidence_types:
+    - content_hash
+    - signed_statement
+    - repository_commit
+    - timestamped_record
+    - publication_record
+    - external_reference
+
+  visibility: mixed
+
+  retention:
+    mode: indefinite
+
+allocation_policy:
+  status: not_configured
+
+  allowed_settlement_types:
+    - attribution
+    - credit
+    - future_claim
+    - community_fund
+
+interoperability:
+  export_enabled: true
+
+  canonical_id_namespace: urn:royalty-cell:kazene:royalty-lab
+
+  profile_ref: urn:civilization-os-profile:royalty-cell:v0.1
+
+  record_formats:
+    - yaml
+    - json
+
+extensions:
+  implementation_stage: experimental
+  monetary_settlement_enabled: false
