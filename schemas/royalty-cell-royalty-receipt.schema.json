@@ -1,0 +1,277 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://royalty-cell-protocol.example/schemas/royalty-cell-royalty-receipt.schema.json",
+  "title": "Royalty Cell Royalty Receipt",
+  "description": "Records the pending, partial, completed, failed, held, waived, or reversed settlement of one Allocation Plan line.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "receipt_id",
+    "cell_id",
+    "allocation_plan",
+    "allocation_line_id",
+    "beneficiary_ref",
+    "settlement_type",
+    "unit",
+    "allocated_units",
+    "settled_units",
+    "balance_remaining_units",
+    "settlement_status",
+    "receipt_effect",
+    "issued_at",
+    "visibility"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.4.0"
+    },
+    "record_type": {
+      "const": "royalty_cell_royalty_receipt"
+    },
+    "receipt_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-receipt:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "cell_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "allocation_plan": {
+      "$ref": "#/$defs/allocationPlanRef"
+    },
+    "allocation_line_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._-]*$"
+    },
+    "beneficiary_ref": {
+      "$ref": "#/$defs/reference"
+    },
+    "settlement_type": {
+      "type": "string",
+      "enum": [
+        "money",
+        "credit",
+        "point",
+        "attribution",
+        "access_right",
+        "governance_right",
+        "future_claim"
+      ]
+    },
+    "unit": {
+      "$ref": "#/$defs/unit"
+    },
+    "allocated_units": {
+      "type": "number",
+      "minimum": 0
+    },
+    "settled_units": {
+      "type": "number",
+      "minimum": 0
+    },
+    "balance_remaining_units": {
+      "type": "number",
+      "minimum": 0
+    },
+    "settlement_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "partially_settled",
+        "settled",
+        "failed",
+        "held",
+        "waived",
+        "reversed"
+      ]
+    },
+    "receipt_effect": {
+      "const": "settlement_record_only"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "settled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "settlement_evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "attribution": {
+      "$ref": "#/$defs/attribution"
+    },
+    "status_reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 3000
+    },
+    "hold_ref": {
+      "$ref": "#/$defs/reference"
+    },
+    "waiver_ref": {
+      "$ref": "#/$defs/reference"
+    },
+    "reversal_ref": {
+      "$ref": "#/$defs/reference"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "members",
+        "restricted",
+        "inherit"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "reference": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 1000
+    },
+    "unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "code",
+        "decimals"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "currency",
+            "point",
+            "credit",
+            "attribution",
+            "access_right",
+            "governance_right",
+            "future_claim",
+            "other"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z0-9][A-Z0-9._-]{0,31}$"
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18
+        }
+      }
+    },
+    "allocationPlanRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allocation_plan_id",
+        "source_cell_id",
+        "resolution_status"
+      ],
+      "properties": {
+        "allocation_plan_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-allocation-plan:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "source_cell_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "resolution_status": {
+          "type": "string",
+          "enum": [
+            "resolved",
+            "externally_resolved",
+            "unresolved"
+          ]
+        },
+        "record_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "evidence_type",
+        "evidence_ref",
+        "recorded_at"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-evidence:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "evidence_type": {
+          "type": "string",
+          "enum": [
+            "payment_receipt",
+            "ledger_entry",
+            "signed_statement",
+            "attribution_record",
+            "access_grant",
+            "governance_record",
+            "external_reference",
+            "other"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    },
+    "attribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "not_required",
+            "planned",
+            "provided",
+            "omitted",
+            "disputed"
+          ]
+        },
+        "display_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "target_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    }
+  }
+}
