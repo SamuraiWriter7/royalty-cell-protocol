@@ -1,0 +1,329 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://royalty-cell-protocol.example/schemas/royalty-cell-contribution-claim.schema.json",
+  "title": "Royalty Cell Contribution Claim",
+  "description": "Records a participant's claimed contribution and an optional Cell recognition decision without determining final allocation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "claim_id",
+    "cell_id",
+    "target",
+    "contributor_ref",
+    "contribution_type",
+    "claimed_significance",
+    "description",
+    "claim_status",
+    "allocation_effect",
+    "declared_at",
+    "evidence",
+    "visibility"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.3.0"
+    },
+    "record_type": {
+      "const": "royalty_cell_contribution_claim"
+    },
+    "claim_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-contribution:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "cell_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "contributor_ref": {
+      "$ref": "#/$defs/reference"
+    },
+    "contribution_type": {
+      "type": "string",
+      "enum": [
+        "conceptualization",
+        "research",
+        "architecture",
+        "protocol_design",
+        "implementation",
+        "writing",
+        "editing",
+        "review",
+        "data_provision",
+        "model_provision",
+        "prompt_design",
+        "orchestration",
+        "validation",
+        "governance",
+        "funding",
+        "infrastructure",
+        "other"
+      ]
+    },
+    "claimed_significance": {
+      "$ref": "#/$defs/significance"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5000
+    },
+    "claim_status": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "acknowledged",
+        "recognized",
+        "partially_recognized",
+        "rejected",
+        "disputed",
+        "withdrawn",
+        "superseded"
+      ]
+    },
+    "allocation_effect": {
+      "const": "contribution_evidence_only",
+      "description": "Confirms that the claim and its recognition do not themselves define a final contribution weight or Royalty share."
+    },
+    "declared_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "contribution_period": {
+      "$ref": "#/$defs/contributionPeriod"
+    },
+    "scope_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "recognition": {
+      "$ref": "#/$defs/recognition"
+    },
+    "dispute_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "status_reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "superseded_by_ref": {
+      "$ref": "#/$defs/reference"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "members",
+        "restricted",
+        "inherit"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "reference": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 1000
+    },
+    "significance": {
+      "type": "string",
+      "enum": [
+        "foundational",
+        "major",
+        "supporting",
+        "minor",
+        "unspecified"
+      ]
+    },
+    "contentFingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "value"
+      ],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": [
+            "sha256",
+            "sha512",
+            "blake3",
+            "other"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 512
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_id",
+        "target_record_type",
+        "source_cell_id",
+        "resolution_status"
+      ],
+      "properties": {
+        "target_id": {
+          "$ref": "#/$defs/reference"
+        },
+        "target_record_type": {
+          "type": "string",
+          "enum": [
+            "origin_record",
+            "usage_record",
+            "derivative_record",
+            "project",
+            "output",
+            "other"
+          ]
+        },
+        "source_cell_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "resolution_status": {
+          "type": "string",
+          "enum": [
+            "resolved",
+            "externally_resolved",
+            "unresolved"
+          ]
+        },
+        "record_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "contributionPeriod": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "recognition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "recognized",
+            "partially_recognized",
+            "rejected"
+          ]
+        },
+        "recognized_by_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        },
+        "decided_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "recognized_significance": {
+          "$ref": "#/$defs/significance"
+        },
+        "policy_ref": {
+          "$ref": "#/$defs/reference"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "evidence_type",
+        "evidence_ref",
+        "recorded_at"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-evidence:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "evidence_type": {
+          "type": "string",
+          "enum": [
+            "content_hash",
+            "signed_statement",
+            "repository_commit",
+            "timestamped_record",
+            "publication_record",
+            "usage_log",
+            "execution_receipt",
+            "audit_record",
+            "external_reference",
+            "other"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "digest": {
+          "$ref": "#/$defs/contentFingerprint"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      }
+    }
+  }
+}
