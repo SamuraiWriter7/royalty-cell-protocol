@@ -9,17 +9,9 @@ Supported records:
 - v0.2 Royalty Cell Usage Record
 - v0.3 Royalty Cell Derivative Record
 - v0.3 Royalty Cell Contribution Claim
-
-Validation stages:
-
-1. YAML loading
-2. Record-type-specific JSON Schema validation
-3. Record-type-specific semantic validation
-4. Local record-reference validation
-
-Files under examples/pass must pass all stages.
-
-Files under examples/fail must fail at least one stage.
+- v0.4 Contribution Weight Resolution
+- v0.4 Allocation Plan
+- v0.4 Royalty Receipt
 """
 
 from __future__ import annotations
@@ -27,6 +19,7 @@ from __future__ import annotations
 import json
 import sys
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -38,29 +31,30 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 
 SCHEMA_PATHS = {
     "royalty_cell_manifest": (
-        ROOT_DIR
-        / "schemas"
-        / "royalty-cell-manifest.schema.json"
+        ROOT_DIR / "schemas" / "royalty-cell-manifest.schema.json"
     ),
     "royalty_cell_origin_record": (
-        ROOT_DIR
-        / "schemas"
-        / "royalty-cell-origin-record.schema.json"
+        ROOT_DIR / "schemas" / "royalty-cell-origin-record.schema.json"
     ),
     "royalty_cell_usage_record": (
-        ROOT_DIR
-        / "schemas"
-        / "royalty-cell-usage-record.schema.json"
+        ROOT_DIR / "schemas" / "royalty-cell-usage-record.schema.json"
     ),
     "royalty_cell_derivative_record": (
-        ROOT_DIR
-        / "schemas"
-        / "royalty-cell-derivative-record.schema.json"
+        ROOT_DIR / "schemas" / "royalty-cell-derivative-record.schema.json"
     ),
     "royalty_cell_contribution_claim": (
+        ROOT_DIR / "schemas" / "royalty-cell-contribution-claim.schema.json"
+    ),
+    "royalty_cell_contribution_weight_resolution": (
         ROOT_DIR
         / "schemas"
-        / "royalty-cell-contribution-claim.schema.json"
+        / "royalty-cell-contribution-weight-resolution.schema.json"
+    ),
+    "royalty_cell_allocation_plan": (
+        ROOT_DIR / "schemas" / "royalty-cell-allocation-plan.schema.json"
+    ),
+    "royalty_cell_royalty_receipt": (
+        ROOT_DIR / "schemas" / "royalty-cell-royalty-receipt.schema.json"
     ),
 }
 
@@ -69,6 +63,9 @@ ID_FIELDS = {
     "royalty_cell_usage_record": "usage_id",
     "royalty_cell_derivative_record": "derivative_id",
     "royalty_cell_contribution_claim": "claim_id",
+    "royalty_cell_contribution_weight_resolution": "resolution_id",
+    "royalty_cell_allocation_plan": "allocation_plan_id",
+    "royalty_cell_royalty_receipt": "receipt_id",
 }
 
 TARGET_TYPE_TO_RECORD_TYPE = {
@@ -82,36 +79,32 @@ FAIL_DIR = ROOT_DIR / "examples" / "fail"
 
 
 def load_json(path: Path) -> dict[str, Any]:
-    """Load a JSON object from disk."""
     with path.open("r", encoding="utf-8") as file:
         data = json.load(file)
 
     if not isinstance(data, dict):
-        raise ValueError(f"{path}: root value must be a JSON object")
+        raise ValueError(f"{path}: root value must be an object")
 
     return data
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
-    """Load a YAML mapping from disk."""
     with path.open("r", encoding="utf-8") as file:
         data = yaml.safe_load(file)
 
     if not isinstance(data, dict):
-        raise ValueError(f"{path}: root value must be a YAML mapping")
+        raise ValueError(f"{path}: root value must be a mapping")
 
     return data
 
 
 def collect_yaml_files(directory: Path) -> list[Path]:
-    """Return YAML files in stable order."""
     files = list(directory.glob("*.yaml"))
     files.extend(directory.glob("*.yml"))
     return sorted(set(files))
 
 
 def format_error_path(parts: list[Any]) -> str:
-    """Convert a jsonschema path into a readable dotted path."""
     if not parts:
         return "<root>"
 
@@ -129,7 +122,6 @@ def format_error_path(parts: list[Any]) -> str:
 
 
 def parse_datetime(value: Any) -> datetime | None:
-    """Parse an ISO-8601 datetime when possible."""
     if not isinstance(value, str):
         return None
 
@@ -144,8 +136,28 @@ def parse_datetime(value: Any) -> datetime | None:
         return None
 
 
+def to_decimal(value: Any) -> Decimal | None:
+    if isinstance(value, bool):
+        return None
+
+    if not isinstance(value, (int, float, str, Decimal)):
+        return None
+
+    try:
+        return Decimal(str(value))
+    except InvalidOperation:
+        return None
+
+
+def decimal_equal(
+    left: Decimal,
+    right: Decimal,
+    tolerance: Decimal,
+) -> bool:
+    return abs(left - right) <= tolerance
+
+
 def duplicate_values(values: list[str]) -> list[str]:
-    """Return duplicated values in stable order."""
     return sorted(
         {
             value
@@ -156,7 +168,6 @@ def duplicate_values(values: list[str]) -> list[str]:
 
 
 def load_validators() -> dict[str, Draft202012Validator]:
-    """Load and compile all JSON Schema validators."""
     validators: dict[str, Draft202012Validator] = {}
 
     for record_type, schema_path in SCHEMA_PATHS.items():
@@ -175,7 +186,6 @@ def schema_errors(
     document: dict[str, Any],
     validators: dict[str, Draft202012Validator],
 ) -> list[str]:
-    """Return JSON Schema errors for a document."""
     record_type = document.get("record_type")
 
     if not isinstance(record_type, str):
@@ -188,58 +198,22 @@ def schema_errors(
 
     errors: list[str] = []
 
-    sorted_errors = sorted(
+    for error in sorted(
         validator.iter_errors(document),
-        key=lambda error: list(error.absolute_path),
-    )
-
-    for error in sorted_errors:
+        key=lambda item: list(item.absolute_path),
+    ):
         path = format_error_path(list(error.absolute_path))
         errors.append(f"{path}: {error.message}")
 
     return errors
 
 
-def evidence_semantic_errors(
-    document: dict[str, Any],
-) -> list[str]:
-    """Validate Evidence identifier uniqueness."""
-    errors: list[str] = []
-    evidence = document.get("evidence", [])
-
-    if not isinstance(evidence, list):
-        return errors
-
-    evidence_ids: list[str] = []
-
-    for item in evidence:
-        if not isinstance(item, dict):
-            continue
-
-        evidence_id = item.get("evidence_id")
-
-        if isinstance(evidence_id, str):
-            evidence_ids.append(evidence_id)
-
-    for evidence_id in duplicate_values(evidence_ids):
-        errors.append(
-            f"evidence: duplicate evidence_id '{evidence_id}'"
-        )
-
-    return errors
-
-
-def collect_known_record_ids(
+def collect_known_records(
     pass_files: list[Path],
     validators: dict[str, Draft202012Validator],
-) -> dict[str, set[str]]:
-    """
-    Collect schema-valid record identifiers from passing examples.
-
-    Semantic validation later uses these identifiers to verify local links.
-    """
-    known_ids: dict[str, set[str]] = {
-        record_type: set()
+) -> dict[str, dict[str, dict[str, Any]]]:
+    known: dict[str, dict[str, dict[str, Any]]] = {
+        record_type: {}
         for record_type in ID_FIELDS
     }
 
@@ -261,25 +235,52 @@ def collect_known_record_ids(
         record_id = document.get(id_field)
 
         if isinstance(record_id, str):
-            known_ids[record_type].add(record_id)
+            known[record_type][record_id] = document
 
-    return known_ids
+    return known
+
+
+def evidence_semantic_errors(
+    document: dict[str, Any],
+    field_name: str = "evidence",
+) -> list[str]:
+    errors: list[str] = []
+    evidence = document.get(field_name, [])
+
+    if not isinstance(evidence, list):
+        return errors
+
+    evidence_ids: list[str] = []
+
+    for item in evidence:
+        if not isinstance(item, dict):
+            continue
+
+        evidence_id = item.get("evidence_id")
+
+        if isinstance(evidence_id, str):
+            evidence_ids.append(evidence_id)
+
+    for evidence_id in duplicate_values(evidence_ids):
+        errors.append(
+            f"{field_name}: duplicate evidence_id '{evidence_id}'"
+        )
+
+    return errors
 
 
 def manifest_semantic_errors(
     document: dict[str, Any],
 ) -> list[str]:
-    """Validate Royalty Cell Manifest semantics."""
     errors: list[str] = []
 
     created_at = parse_datetime(document.get("created_at"))
     updated_at = parse_datetime(document.get("updated_at"))
 
-    if created_at is not None and updated_at is not None:
-        if updated_at < created_at:
-            errors.append(
-                "updated_at: must be equal to or later than created_at"
-            )
+    if created_at and updated_at and updated_at < created_at:
+        errors.append(
+            "updated_at: must be equal to or later than created_at"
+        )
 
     governance = document.get("governance", {})
 
@@ -293,34 +294,33 @@ def manifest_semantic_errors(
 
             if approval_rule == "external" and not policy_ref:
                 errors.append(
-                    "governance.decision_policy.policy_ref: "
-                    "required when approval_rule is 'external'"
+                    "governance.decision_policy.policy_ref: required "
+                    "when approval_rule is 'external'"
                 )
 
             if mode == "external_policy" and not policy_ref:
                 errors.append(
-                    "governance.decision_policy.policy_ref: "
-                    "required when governance mode is 'external_policy'"
+                    "governance.decision_policy.policy_ref: required "
+                    "when governance mode is 'external_policy'"
                 )
 
     membership = document.get("membership", {})
 
     if isinstance(membership, dict):
         admission_mode = membership.get("admission_mode")
-        admission_policy_ref = membership.get("admission_policy_ref")
 
         if admission_mode in {"request", "invite_only"}:
-            if not admission_policy_ref:
+            if not membership.get("admission_policy_ref"):
                 errors.append(
-                    "membership.admission_policy_ref: required when "
-                    "admission_mode is 'request' or 'invite_only'"
+                    "membership.admission_policy_ref: required for "
+                    "request or invite_only admission"
                 )
 
         roles = membership.get("roles", [])
 
         if isinstance(roles, list):
             role_ids: list[str] = []
-            has_administrator = False
+            has_admin = False
 
             for role in roles:
                 if not isinstance(role, dict):
@@ -333,75 +333,22 @@ def manifest_semantic_errors(
 
                 permissions = role.get("permissions", [])
 
-                if isinstance(permissions, list):
-                    if "administer_cell" in permissions:
-                        has_administrator = True
+                if (
+                    isinstance(permissions, list)
+                    and "administer_cell" in permissions
+                ):
+                    has_admin = True
 
             for role_id in duplicate_values(role_ids):
                 errors.append(
                     f"membership.roles: duplicate role_id '{role_id}'"
                 )
 
-            if not has_administrator:
+            if not has_admin:
                 errors.append(
                     "membership.roles: at least one role must include "
                     "the 'administer_cell' permission"
                 )
-
-    recording_policy = document.get("recording_policy", {})
-
-    if isinstance(recording_policy, dict):
-        evidence_requirement = recording_policy.get(
-            "evidence_requirement"
-        )
-        accepted_evidence_types = recording_policy.get(
-            "accepted_evidence_types"
-        )
-        evidence_policy_ref = recording_policy.get(
-            "evidence_policy_ref"
-        )
-
-        if evidence_requirement == "required":
-            if not isinstance(accepted_evidence_types, list):
-                errors.append(
-                    "recording_policy.accepted_evidence_types: "
-                    "required when evidence_requirement is 'required'"
-                )
-            elif not accepted_evidence_types:
-                errors.append(
-                    "recording_policy.accepted_evidence_types: "
-                    "must not be empty when evidence is required"
-                )
-
-        if evidence_requirement == "policy_defined":
-            if not evidence_policy_ref:
-                errors.append(
-                    "recording_policy.evidence_policy_ref: "
-                    "required when evidence_requirement is "
-                    "'policy_defined'"
-                )
-
-        retention = recording_policy.get("retention", {})
-
-        if isinstance(retention, dict):
-            retention_mode = retention.get("mode")
-
-            if retention_mode == "fixed_period":
-                duration_days = retention.get("duration_days")
-
-                if not isinstance(duration_days, int):
-                    errors.append(
-                        "recording_policy.retention.duration_days: "
-                        "required when retention mode is 'fixed_period'"
-                    )
-
-            if retention_mode == "external_policy":
-                if not retention.get("policy_ref"):
-                    errors.append(
-                        "recording_policy.retention.policy_ref: "
-                        "required when retention mode is "
-                        "'external_policy'"
-                    )
 
     allocation_policy = document.get("allocation_policy", {})
 
@@ -411,14 +358,14 @@ def manifest_semantic_errors(
 
         if status in {"internal", "external"} and not policy_ref:
             errors.append(
-                "allocation_policy.policy_ref: required when "
-                "allocation-policy status is 'internal' or 'external'"
+                "allocation_policy.policy_ref: required when status "
+                "is 'internal' or 'external'"
             )
 
         if status == "not_configured" and policy_ref:
             errors.append(
                 "allocation_policy.policy_ref: must be omitted when "
-                "allocation-policy status is 'not_configured'"
+                "status is 'not_configured'"
             )
 
     return errors
@@ -427,7 +374,6 @@ def manifest_semantic_errors(
 def origin_semantic_errors(
     document: dict[str, Any],
 ) -> list[str]:
-    """Validate Origin Record semantics."""
     errors: list[str] = []
 
     origin_created_at = parse_datetime(
@@ -435,11 +381,14 @@ def origin_semantic_errors(
     )
     declared_at = parse_datetime(document.get("declared_at"))
 
-    if origin_created_at is not None and declared_at is not None:
-        if origin_created_at > declared_at:
-            errors.append(
-                "origin_created_at: must not be later than declared_at"
-            )
+    if (
+        origin_created_at
+        and declared_at
+        and origin_created_at > declared_at
+    ):
+        errors.append(
+            "origin_created_at: must not be later than declared_at"
+        )
 
     claim_basis = document.get("claim_basis")
     claim_status = document.get("claim_status")
@@ -447,445 +396,288 @@ def origin_semantic_errors(
     if claim_basis == "imported_record":
         if not document.get("imported_from_ref"):
             errors.append(
-                "imported_from_ref: required when claim_basis is "
-                "'imported_record'"
+                "imported_from_ref: required for imported_record"
             )
 
     if claim_status == "contested":
-        contest_refs = document.get("contest_refs")
-
-        if not isinstance(contest_refs, list) or not contest_refs:
+        if not document.get("contest_refs"):
             errors.append(
-                "contest_refs: required when claim_status is "
-                "'contested'"
+                "contest_refs: required when claim_status is contested"
             )
 
     if claim_status == "withdrawn":
         if not document.get("status_reason"):
             errors.append(
-                "status_reason: required when claim_status is "
-                "'withdrawn'"
+                "status_reason: required when claim_status is withdrawn"
             )
 
     if claim_status == "superseded":
         if not document.get("superseded_by_ref"):
             errors.append(
                 "superseded_by_ref: required when claim_status is "
-                "'superseded'"
+                "superseded"
             )
 
     errors.extend(evidence_semantic_errors(document))
-
     return errors
 
 
 def usage_semantic_errors(
     document: dict[str, Any],
-    known_ids: dict[str, set[str]],
+    known: dict[str, dict[str, dict[str, Any]]],
 ) -> list[str]:
-    """Validate Usage Record semantics."""
     errors: list[str] = []
-
     usage_status = document.get("usage_status")
 
-    if usage_status == "completed":
-        if not document.get("occurred_at"):
-            errors.append(
-                "occurred_at: required when usage_status is "
-                "'completed'"
-            )
-
-    if usage_status == "disputed":
-        dispute_refs = document.get("dispute_refs")
-
-        if not isinstance(dispute_refs, list) or not dispute_refs:
-            errors.append(
-                "dispute_refs: required when usage_status is "
-                "'disputed'"
-            )
-
-    if usage_status == "withdrawn":
-        if not document.get("status_reason"):
-            errors.append(
-                "status_reason: required when usage_status is "
-                "'withdrawn'"
-            )
+    if usage_status == "completed" and not document.get("occurred_at"):
+        errors.append(
+            "occurred_at: required when usage_status is completed"
+        )
 
     authorization = document.get("authorization", {})
 
     if isinstance(authorization, dict):
         authorization_status = authorization.get("status")
-        authorization_ref = authorization.get("authorization_ref")
-        policy_ref = authorization.get("policy_ref")
 
-        if authorization_status == "granted":
-            if not authorization_ref:
-                errors.append(
-                    "authorization.authorization_ref: required when "
-                    "authorization status is 'granted'"
-                )
+        if (
+            authorization_status == "granted"
+            and not authorization.get("authorization_ref")
+        ):
+            errors.append(
+                "authorization.authorization_ref: required when "
+                "authorization is granted"
+            )
 
-        if authorization_status == "not_required":
-            if not policy_ref:
-                errors.append(
-                    "authorization.policy_ref: required when "
-                    "authorization status is 'not_required'"
-                )
+        if (
+            authorization_status == "not_required"
+            and not authorization.get("policy_ref")
+        ):
+            errors.append(
+                "authorization.policy_ref: required when authorization "
+                "is not_required"
+            )
 
-        if authorization_status == "denied":
-            if usage_status == "completed":
-                errors.append(
-                    "usage_status: completed Usage cannot have "
-                    "denied authorization"
-                )
+        if (
+            authorization_status == "denied"
+            and usage_status == "completed"
+        ):
+            errors.append(
+                "usage_status: completed Usage cannot have denied "
+                "authorization"
+            )
 
     origin_links = document.get("origin_links", [])
+    linked_ids: list[str] = []
+    cell_id = document.get("cell_id")
 
     if isinstance(origin_links, list):
-        linked_origin_ids: list[str] = []
-        usage_cell_id = document.get("cell_id")
-
-        for index, origin_link in enumerate(origin_links):
-            if not isinstance(origin_link, dict):
+        for index, link in enumerate(origin_links):
+            if not isinstance(link, dict):
                 continue
 
-            origin_id = origin_link.get("origin_id")
-            source_cell_id = origin_link.get("source_cell_id")
-            resolution_status = origin_link.get("resolution_status")
-            record_ref = origin_link.get("record_ref")
+            origin_id = link.get("origin_id")
+            source_cell_id = link.get("source_cell_id")
+            resolution_status = link.get("resolution_status")
 
             if isinstance(origin_id, str):
-                linked_origin_ids.append(origin_id)
+                linked_ids.append(origin_id)
 
-            if resolution_status == "externally_resolved":
-                if not record_ref:
-                    errors.append(
-                        f"origin_links[{index}].record_ref: required "
-                        "when resolution_status is "
-                        "'externally_resolved'"
-                    )
-
-            is_local_resolved = (
-                resolution_status == "resolved"
-                and source_cell_id == usage_cell_id
-            )
-
-            if is_local_resolved:
-                known_origins = known_ids[
-                    "royalty_cell_origin_record"
-                ]
-
-                if origin_id not in known_origins:
-                    errors.append(
-                        f"origin_links[{index}].origin_id: locally "
-                        f"resolved Origin '{origin_id}' was not found "
-                        "among passing local Origin examples"
-                    )
-
-        for origin_id in duplicate_values(linked_origin_ids):
-            errors.append(
-                f"origin_links: duplicate origin_id '{origin_id}'"
-            )
-
-    attribution = document.get("attribution")
-
-    if isinstance(attribution, dict):
-        attribution_status = attribution.get("status")
-
-        if attribution_status == "provided":
-            if not (
-                attribution.get("display_text")
-                or attribution.get("target_ref")
+            if (
+                resolution_status == "externally_resolved"
+                and not link.get("record_ref")
             ):
                 errors.append(
-                    "attribution: display_text or target_ref is "
-                    "required when attribution status is 'provided'"
+                    f"origin_links[{index}].record_ref: required for "
+                    "externally_resolved Origin"
                 )
 
-    usage_scope = document.get("usage_scope", {})
-
-    if isinstance(usage_scope, dict):
-        start_at = parse_datetime(usage_scope.get("start_at"))
-        end_at = parse_datetime(usage_scope.get("end_at"))
-
-        if start_at is not None and end_at is not None:
-            if end_at < start_at:
+            if (
+                resolution_status == "resolved"
+                and source_cell_id == cell_id
+                and origin_id
+                not in known["royalty_cell_origin_record"]
+            ):
                 errors.append(
-                    "usage_scope.end_at: must be equal to or later "
-                    "than usage_scope.start_at"
+                    f"origin_links[{index}].origin_id: locally "
+                    f"resolved Origin '{origin_id}' was not found"
                 )
+
+    for origin_id in duplicate_values(linked_ids):
+        errors.append(
+            f"origin_links: duplicate origin_id '{origin_id}'"
+        )
 
     errors.extend(evidence_semantic_errors(document))
-
     return errors
 
 
 def derivative_semantic_errors(
     document: dict[str, Any],
-    known_ids: dict[str, set[str]],
+    known: dict[str, dict[str, dict[str, Any]]],
 ) -> list[str]:
-    """Validate Derivative Record semantics."""
     errors: list[str] = []
 
     derivative_id = document.get("derivative_id")
-    derivative_cell_id = document.get("cell_id")
+    cell_id = document.get("cell_id")
+    status = document.get("derivative_status")
     derivative_type = document.get("derivative_type")
-    derivative_status = document.get("derivative_status")
 
     created_at = parse_datetime(document.get("created_at"))
     declared_at = parse_datetime(document.get("declared_at"))
 
-    if created_at is not None and declared_at is not None:
-        if created_at > declared_at:
-            errors.append(
-                "created_at: must not be later than declared_at"
-            )
+    if created_at and declared_at and created_at > declared_at:
+        errors.append(
+            "created_at: must not be later than declared_at"
+        )
 
-    if derivative_status == "contested":
-        contest_refs = document.get("contest_refs")
+    if status == "contested" and not document.get("contest_refs"):
+        errors.append(
+            "contest_refs: required for contested Derivative"
+        )
 
-        if not isinstance(contest_refs, list) or not contest_refs:
-            errors.append(
-                "contest_refs: required when derivative_status is "
-                "'contested'"
-            )
+    if status == "withdrawn" and not document.get("status_reason"):
+        errors.append(
+            "status_reason: required for withdrawn Derivative"
+        )
 
-    if derivative_status == "withdrawn":
-        if not document.get("status_reason"):
-            errors.append(
-                "status_reason: required when derivative_status is "
-                "'withdrawn'"
-            )
-
-    if derivative_status == "superseded":
-        if not document.get("superseded_by_ref"):
-            errors.append(
-                "superseded_by_ref: required when derivative_status "
-                "is 'superseded'"
-            )
+    if status == "superseded" and not document.get(
+        "superseded_by_ref"
+    ):
+        errors.append(
+            "superseded_by_ref: required for superseded Derivative"
+        )
 
     parent_links = document.get("parent_links", [])
+    source_ids: list[str] = []
+    primary_count = 0
 
     if isinstance(parent_links, list):
-        source_ids: list[str] = []
-        primary_parent_count = 0
-
         for index, parent in enumerate(parent_links):
             if not isinstance(parent, dict):
                 continue
 
             source_id = parent.get("source_id")
-            source_record_type = parent.get("source_record_type")
+            source_type = parent.get("source_record_type")
             source_cell_id = parent.get("source_cell_id")
-            dependency_level = parent.get("dependency_level")
             resolution_status = parent.get("resolution_status")
-            record_ref = parent.get("record_ref")
 
             if isinstance(source_id, str):
                 source_ids.append(source_id)
 
-            if dependency_level == "primary":
-                primary_parent_count += 1
+            if parent.get("dependency_level") == "primary":
+                primary_count += 1
 
             if source_id == derivative_id:
                 errors.append(
-                    f"parent_links[{index}].source_id: a Derivative "
-                    "Record cannot reference itself as a parent"
+                    f"parent_links[{index}].source_id: Derivative "
+                    "cannot reference itself"
                 )
-
-            expected_prefix = None
-
-            if source_record_type == "origin_record":
-                expected_prefix = "urn:royalty-origin:"
-            elif source_record_type == "derivative_record":
-                expected_prefix = "urn:royalty-derivative:"
 
             if (
-                isinstance(source_id, str)
-                and expected_prefix is not None
-                and not source_id.startswith(expected_prefix)
+                resolution_status == "externally_resolved"
+                and not parent.get("record_ref")
             ):
                 errors.append(
-                    f"parent_links[{index}].source_id: identifier "
-                    f"does not match source_record_type "
-                    f"'{source_record_type}'"
+                    f"parent_links[{index}].record_ref: required for "
+                    "externally_resolved parent"
                 )
 
-            if resolution_status == "externally_resolved":
-                if not record_ref:
-                    errors.append(
-                        f"parent_links[{index}].record_ref: required "
-                        "when resolution_status is "
-                        "'externally_resolved'"
-                    )
-
-            is_local_resolved = (
+            if (
                 resolution_status == "resolved"
-                and source_cell_id == derivative_cell_id
-            )
-
-            if is_local_resolved:
-                local_record_type = (
-                    TARGET_TYPE_TO_RECORD_TYPE.get(
-                        source_record_type
-                    )
+                and source_cell_id == cell_id
+            ):
+                local_type = TARGET_TYPE_TO_RECORD_TYPE.get(
+                    source_type
                 )
 
-                if local_record_type is not None:
-                    known_sources = known_ids[local_record_type]
-
-                    if source_id not in known_sources:
-                        errors.append(
-                            f"parent_links[{index}].source_id: "
-                            f"locally resolved {source_record_type} "
-                            f"'{source_id}' was not found among "
-                            "passing local examples"
-                        )
+                if (
+                    local_type
+                    and source_id not in known[local_type]
+                ):
+                    errors.append(
+                        f"parent_links[{index}].source_id: locally "
+                        f"resolved parent '{source_id}' was not found"
+                    )
 
         for source_id in duplicate_values(source_ids):
             errors.append(
                 f"parent_links: duplicate source_id '{source_id}'"
             )
 
-        if primary_parent_count == 0:
+        if primary_count == 0:
             errors.append(
-                "parent_links: at least one parent must have "
-                "dependency_level 'primary'"
+                "parent_links: at least one primary parent is required"
             )
 
-        if derivative_type == "combination":
-            if len(set(source_ids)) < 2:
-                errors.append(
-                    "parent_links: derivative_type 'combination' "
-                    "requires at least two distinct parents"
-                )
+        if (
+            derivative_type == "combination"
+            and len(set(source_ids)) < 2
+        ):
+            errors.append(
+                "parent_links: combination requires two distinct parents"
+            )
 
     errors.extend(evidence_semantic_errors(document))
-
     return errors
 
 
 def contribution_semantic_errors(
     document: dict[str, Any],
-    known_ids: dict[str, set[str]],
+    known: dict[str, dict[str, dict[str, Any]]],
 ) -> list[str]:
-    """Validate Contribution Claim semantics."""
     errors: list[str] = []
 
     claim_status = document.get("claim_status")
-    contribution_cell_id = document.get("cell_id")
-
+    cell_id = document.get("cell_id")
     target = document.get("target", {})
 
     if isinstance(target, dict):
         target_id = target.get("target_id")
-        target_record_type = target.get("target_record_type")
+        target_type = target.get("target_record_type")
         source_cell_id = target.get("source_cell_id")
         resolution_status = target.get("resolution_status")
-        record_ref = target.get("record_ref")
-
-        expected_prefixes = {
-            "origin_record": "urn:royalty-origin:",
-            "usage_record": "urn:royalty-usage:",
-            "derivative_record": "urn:royalty-derivative:",
-        }
-
-        expected_prefix = expected_prefixes.get(
-            target_record_type
-        )
 
         if (
-            isinstance(target_id, str)
-            and expected_prefix is not None
-            and not target_id.startswith(expected_prefix)
+            resolution_status == "externally_resolved"
+            and not target.get("record_ref")
         ):
             errors.append(
-                "target.target_id: identifier does not match "
-                f"target_record_type '{target_record_type}'"
+                "target.record_ref: required for externally_resolved target"
             )
 
-        if resolution_status == "externally_resolved":
-            if not record_ref:
-                errors.append(
-                    "target.record_ref: required when "
-                    "resolution_status is 'externally_resolved'"
-                )
-
-        is_local_resolved = (
+        if (
             resolution_status == "resolved"
-            and source_cell_id == contribution_cell_id
-        )
-
-        if is_local_resolved:
-            local_record_type = TARGET_TYPE_TO_RECORD_TYPE.get(
-                target_record_type
+            and source_cell_id == cell_id
+        ):
+            local_type = TARGET_TYPE_TO_RECORD_TYPE.get(
+                target_type
             )
 
-            if local_record_type is not None:
-                known_targets = known_ids[local_record_type]
-
-                if target_id not in known_targets:
-                    errors.append(
-                        "target.target_id: locally resolved "
-                        f"{target_record_type} '{target_id}' was not "
-                        "found among passing local examples"
-                    )
-
-    contribution_period = document.get(
-        "contribution_period",
-        {},
-    )
-
-    if isinstance(contribution_period, dict):
-        start_at = parse_datetime(
-            contribution_period.get("start_at")
-        )
-        end_at = parse_datetime(
-            contribution_period.get("end_at")
-        )
-
-        if start_at is not None and end_at is not None:
-            if end_at < start_at:
+            if local_type and target_id not in known[local_type]:
                 errors.append(
-                    "contribution_period.end_at: must be equal to "
-                    "or later than contribution_period.start_at"
+                    f"target.target_id: locally resolved target "
+                    f"'{target_id}' was not found"
                 )
 
-    recognition = document.get("recognition")
-
-    expected_recognition_status = {
+    expected_recognition = {
         "recognized": "recognized",
         "partially_recognized": "partially_recognized",
         "rejected": "rejected",
     }
 
-    expected_status = expected_recognition_status.get(
-        claim_status
-    )
+    recognition = document.get("recognition")
+    expected_status = expected_recognition.get(claim_status)
 
     if expected_status is not None:
         if not isinstance(recognition, dict):
             errors.append(
-                "recognition: required when claim_status is "
+                f"recognition: required when claim_status is "
                 f"'{claim_status}'"
             )
-        else:
-            actual_status = recognition.get("status")
-
-            if actual_status != expected_status:
-                errors.append(
-                    "recognition.status: expected "
-                    f"'{expected_status}' when claim_status is "
-                    f"'{claim_status}'"
-                )
-
-    if claim_status in {"submitted", "acknowledged"}:
-        if isinstance(recognition, dict):
-            if recognition.get("status") != "pending":
-                errors.append(
-                    "recognition.status: submitted or acknowledged "
-                    "claims may only have pending recognition"
-                )
+        elif recognition.get("status") != expected_status:
+            errors.append(
+                f"recognition.status: expected '{expected_status}'"
+            )
 
     if isinstance(recognition, dict):
         recognition_status = recognition.get("status")
@@ -895,36 +687,19 @@ def contribution_semantic_errors(
             "partially_recognized",
             "rejected",
         }:
-            recognized_by_refs = recognition.get(
-                "recognized_by_refs"
-            )
+            required = [
+                "recognized_by_refs",
+                "decided_at",
+                "rationale",
+                "policy_ref",
+            ]
 
-            if (
-                not isinstance(recognized_by_refs, list)
-                or not recognized_by_refs
-            ):
-                errors.append(
-                    "recognition.recognized_by_refs: required for "
-                    "completed recognition decisions"
-                )
-
-            if not recognition.get("decided_at"):
-                errors.append(
-                    "recognition.decided_at: required for completed "
-                    "recognition decisions"
-                )
-
-            if not recognition.get("rationale"):
-                errors.append(
-                    "recognition.rationale: required for completed "
-                    "recognition decisions"
-                )
-
-            if not recognition.get("policy_ref"):
-                errors.append(
-                    "recognition.policy_ref: required for completed "
-                    "recognition decisions"
-                )
+            for field in required:
+                if not recognition.get(field):
+                    errors.append(
+                        f"recognition.{field}: required for completed "
+                        "recognition decision"
+                    )
 
         if recognition_status in {
             "recognized",
@@ -932,43 +707,707 @@ def contribution_semantic_errors(
         }:
             if not recognition.get("recognized_significance"):
                 errors.append(
-                    "recognition.recognized_significance: required "
-                    "for recognized or partially recognized claims"
+                    "recognition.recognized_significance: required"
                 )
 
-    if claim_status == "disputed":
-        dispute_refs = document.get("dispute_refs")
+    if claim_status == "disputed" and not document.get(
+        "dispute_refs"
+    ):
+        errors.append(
+            "dispute_refs: required for disputed Contribution Claim"
+        )
 
-        if not isinstance(dispute_refs, list) or not dispute_refs:
+    if claim_status == "withdrawn" and not document.get(
+        "status_reason"
+    ):
+        errors.append(
+            "status_reason: required for withdrawn Contribution Claim"
+        )
+
+    if claim_status == "superseded" and not document.get(
+        "superseded_by_ref"
+    ):
+        errors.append(
+            "superseded_by_ref: required for superseded claim"
+        )
+
+    errors.extend(evidence_semantic_errors(document))
+    return errors
+
+
+def weight_resolution_semantic_errors(
+    document: dict[str, Any],
+    known: dict[str, dict[str, dict[str, Any]]],
+) -> list[str]:
+    errors: list[str] = []
+
+    cell_id = document.get("cell_id")
+    status = document.get("resolution_status")
+    method = document.get("method")
+    target = document.get("target", {})
+
+    if isinstance(target, dict):
+        if (
+            target.get("resolution_status") == "externally_resolved"
+            and not target.get("record_ref")
+        ):
             errors.append(
-                "dispute_refs: required when claim_status is "
-                "'disputed'"
+                "target.record_ref: required for externally_resolved target"
             )
 
-    if claim_status == "withdrawn":
-        if not document.get("status_reason"):
+        if (
+            target.get("resolution_status") == "resolved"
+            and target.get("source_cell_id") == cell_id
+            and target.get("target_record_type") == "derivative_record"
+            and target.get("target_id")
+            not in known["royalty_cell_derivative_record"]
+        ):
             errors.append(
-                "status_reason: required when claim_status is "
-                "'withdrawn'"
+                "target.target_id: locally resolved Derivative was not found"
             )
 
-    if claim_status == "superseded":
-        if not document.get("superseded_by_ref"):
+    assignments = document.get("assignments", [])
+    assignment_ids: list[str] = []
+    claim_refs: list[str] = []
+    weight_total = Decimal("0")
+
+    if isinstance(assignments, list):
+        for index, assignment in enumerate(assignments):
+            if not isinstance(assignment, dict):
+                continue
+
+            assignment_id = assignment.get("assignment_id")
+            claim_ref = assignment.get("contribution_claim_ref")
+            resolution_status = assignment.get("resolution_status")
+            source_cell_id = assignment.get("source_cell_id")
+            weight = to_decimal(
+                assignment.get("normalized_weight")
+            )
+
+            if isinstance(assignment_id, str):
+                assignment_ids.append(assignment_id)
+
+            if isinstance(claim_ref, str):
+                claim_refs.append(claim_ref)
+
+            if weight is not None:
+                weight_total += weight
+
+            if (
+                resolution_status == "externally_resolved"
+                and not assignment.get("record_ref")
+            ):
+                errors.append(
+                    f"assignments[{index}].record_ref: required for "
+                    "externally_resolved claim"
+                )
+
+            if (
+                resolution_status == "resolved"
+                and source_cell_id == cell_id
+            ):
+                claim_document = known[
+                    "royalty_cell_contribution_claim"
+                ].get(claim_ref)
+
+                if claim_document is None:
+                    errors.append(
+                        f"assignments[{index}].contribution_claim_ref: "
+                        f"locally resolved claim '{claim_ref}' was not found"
+                    )
+                elif status == "finalized":
+                    if claim_document.get("claim_status") not in {
+                        "recognized",
+                        "partially_recognized",
+                    }:
+                        errors.append(
+                            f"assignments[{index}]: finalized Weight "
+                            "Resolution may only use recognized claims"
+                        )
+
+                    expected_contributor = claim_document.get(
+                        "contributor_ref"
+                    )
+
+                    if (
+                        expected_contributor
+                        and assignment.get("contributor_ref")
+                        != expected_contributor
+                    ):
+                        errors.append(
+                            f"assignments[{index}].contributor_ref: "
+                            "does not match Contribution Claim"
+                        )
+
+    for assignment_id in duplicate_values(assignment_ids):
+        errors.append(
+            f"assignments: duplicate assignment_id '{assignment_id}'"
+        )
+
+    for claim_ref in duplicate_values(claim_refs):
+        errors.append(
+            f"assignments: duplicate Contribution Claim '{claim_ref}'"
+        )
+
+    normalization = document.get("normalization", {})
+    tolerance = Decimal("0")
+
+    if isinstance(normalization, dict):
+        parsed_tolerance = to_decimal(
+            normalization.get("tolerance")
+        )
+
+        if parsed_tolerance is not None:
+            tolerance = parsed_tolerance
+
+    if status == "finalized":
+        if not decimal_equal(
+            weight_total,
+            Decimal("1"),
+            tolerance,
+        ):
             errors.append(
-                "superseded_by_ref: required when claim_status is "
-                "'superseded'"
+                "assignments.normalized_weight: finalized weights "
+                f"must sum to 1; got {weight_total}"
+            )
+
+        decision = document.get("decision")
+
+        if not isinstance(decision, dict):
+            errors.append(
+                "decision: required for finalized Weight Resolution"
+            )
+        elif (
+            method == "external"
+            and not decision.get("external_result_ref")
+        ):
+            errors.append(
+                "decision.external_result_ref: required for external method"
+            )
+
+    if status == "revoked":
+        if not document.get("revoked_at"):
+            errors.append(
+                "revoked_at: required for revoked Weight Resolution"
+            )
+
+        if not document.get("revocation_reason"):
+            errors.append(
+                "revocation_reason: required for revoked Weight Resolution"
             )
 
     errors.extend(evidence_semantic_errors(document))
+    return errors
+
+
+def allocation_plan_semantic_errors(
+    document: dict[str, Any],
+    known: dict[str, dict[str, dict[str, Any]]],
+) -> list[str]:
+    errors: list[str] = []
+
+    cell_id = document.get("cell_id")
+    plan_status = document.get("plan_status")
+    weight_ref = document.get("weight_resolution", {})
+
+    weight_document: dict[str, Any] | None = None
+
+    if isinstance(weight_ref, dict):
+        resolution_id = weight_ref.get("resolution_id")
+
+        if (
+            weight_ref.get("resolution_status")
+            == "externally_resolved"
+            and not weight_ref.get("record_ref")
+        ):
+            errors.append(
+                "weight_resolution.record_ref: required for "
+                "externally_resolved Weight Resolution"
+            )
+
+        if (
+            weight_ref.get("resolution_status") == "resolved"
+            and weight_ref.get("source_cell_id") == cell_id
+        ):
+            weight_document = known[
+                "royalty_cell_contribution_weight_resolution"
+            ].get(resolution_id)
+
+            if weight_document is None:
+                errors.append(
+                    "weight_resolution.resolution_id: locally resolved "
+                    "Weight Resolution was not found"
+                )
+            elif (
+                weight_document.get("resolution_status")
+                != "finalized"
+            ):
+                errors.append(
+                    "weight_resolution: Allocation Plan requires a "
+                    "finalized Weight Resolution"
+                )
+
+    rounding = document.get("rounding", {})
+    tolerance = Decimal("0")
+
+    if isinstance(rounding, dict):
+        parsed_tolerance = to_decimal(rounding.get("tolerance"))
+
+        if parsed_tolerance is not None:
+            tolerance = parsed_tolerance
+
+    value_event = document.get("source_value_event", {})
+    gross_units = Decimal("0")
+
+    if isinstance(value_event, dict):
+        parsed_gross = to_decimal(value_event.get("gross_units"))
+
+        if parsed_gross is not None:
+            gross_units = parsed_gross
+
+    deduction_total = Decimal("0")
+    deduction_ids: list[str] = []
+
+    deductions = document.get("deductions", [])
+
+    if isinstance(deductions, list):
+        for deduction in deductions:
+            if not isinstance(deduction, dict):
+                continue
+
+            deduction_id = deduction.get("deduction_id")
+
+            if isinstance(deduction_id, str):
+                deduction_ids.append(deduction_id)
+
+            units = to_decimal(deduction.get("units"))
+
+            if units is not None:
+                deduction_total += units
+
+    for deduction_id in duplicate_values(deduction_ids):
+        errors.append(
+            f"deductions: duplicate deduction_id '{deduction_id}'"
+        )
+
+    distributable = to_decimal(
+        document.get("distributable_units")
+    )
+
+    if distributable is not None:
+        expected_distributable = gross_units - deduction_total
+
+        if not decimal_equal(
+            expected_distributable,
+            distributable,
+            tolerance,
+        ):
+            errors.append(
+                "distributable_units: gross units minus deductions "
+                f"equals {expected_distributable}, not {distributable}"
+            )
+
+    allocations = document.get("allocations", [])
+    line_ids: list[str] = []
+    allocation_total = Decimal("0")
+    applied_weight_total = Decimal("0")
+    allocated_claim_refs: list[str] = []
+
+    if isinstance(allocations, list):
+        for index, line in enumerate(allocations):
+            if not isinstance(line, dict):
+                continue
+
+            line_id = line.get("allocation_line_id")
+
+            if isinstance(line_id, str):
+                line_ids.append(line_id)
+
+            units = to_decimal(line.get("allocated_units"))
+            weight = to_decimal(line.get("applied_weight"))
+
+            if units is not None:
+                allocation_total += units
+
+            if weight is not None:
+                applied_weight_total += weight
+
+            claim_refs = line.get("contribution_claim_refs", [])
+
+            if isinstance(claim_refs, list):
+                allocated_claim_refs.extend(
+                    item
+                    for item in claim_refs
+                    if isinstance(item, str)
+                )
+
+                if weight_document is not None:
+                    assignments = weight_document.get(
+                        "assignments",
+                        [],
+                    )
+
+                    claim_weight_map: dict[str, Decimal] = {}
+
+                    if isinstance(assignments, list):
+                        for assignment in assignments:
+                            if not isinstance(assignment, dict):
+                                continue
+
+                            claim_ref = assignment.get(
+                                "contribution_claim_ref"
+                            )
+                            assignment_weight = to_decimal(
+                                assignment.get("normalized_weight")
+                            )
+
+                            if (
+                                isinstance(claim_ref, str)
+                                and assignment_weight is not None
+                            ):
+                                claim_weight_map[
+                                    claim_ref
+                                ] = assignment_weight
+
+                    expected_weight = sum(
+                        (
+                            claim_weight_map.get(
+                                claim_ref,
+                                Decimal("0"),
+                            )
+                            for claim_ref in claim_refs
+                        ),
+                        Decimal("0"),
+                    )
+
+                    if (
+                        weight is not None
+                        and not decimal_equal(
+                            expected_weight,
+                            weight,
+                            tolerance,
+                        )
+                    ):
+                        errors.append(
+                            f"allocations[{index}].applied_weight: "
+                            f"expected {expected_weight} from referenced "
+                            f"claims, got {weight}"
+                        )
+
+    for line_id in duplicate_values(line_ids):
+        errors.append(
+            f"allocations: duplicate allocation_line_id '{line_id}'"
+        )
+
+    for claim_ref in duplicate_values(allocated_claim_refs):
+        errors.append(
+            f"allocations: Contribution Claim '{claim_ref}' is "
+            "assigned more than once"
+        )
+
+    if distributable is not None:
+        if not decimal_equal(
+            allocation_total,
+            distributable,
+            tolerance,
+        ):
+            errors.append(
+                "allocations.allocated_units: allocation total "
+                f"{allocation_total} does not equal distributable "
+                f"units {distributable}"
+            )
+
+    if not decimal_equal(
+        applied_weight_total,
+        Decimal("1"),
+        tolerance,
+    ):
+        errors.append(
+            "allocations.applied_weight: weights must sum to 1; "
+            f"got {applied_weight_total}"
+        )
+
+    if weight_document is not None:
+        assignments = weight_document.get("assignments", [])
+
+        expected_claim_refs = {
+            assignment.get("contribution_claim_ref")
+            for assignment in assignments
+            if isinstance(assignment, dict)
+            and isinstance(
+                assignment.get("contribution_claim_ref"),
+                str,
+            )
+        }
+
+        actual_claim_refs = set(allocated_claim_refs)
+
+        missing_claims = sorted(
+            expected_claim_refs - actual_claim_refs
+        )
+        unexpected_claims = sorted(
+            actual_claim_refs - expected_claim_refs
+        )
+
+        for claim_ref in missing_claims:
+            errors.append(
+                f"allocations: Weight Resolution claim '{claim_ref}' "
+                "was not allocated"
+            )
+
+        for claim_ref in unexpected_claims:
+            errors.append(
+                f"allocations: claim '{claim_ref}' is not present in "
+                "the Weight Resolution"
+            )
+
+    if plan_status in {
+        "approved",
+        "partially_executed",
+        "executed",
+    }:
+        if not isinstance(document.get("approval"), dict):
+            errors.append(
+                f"approval: required when plan_status is '{plan_status}'"
+            )
+
+    if plan_status == "cancelled":
+        if not document.get("cancelled_at"):
+            errors.append(
+                "cancelled_at: required for cancelled Allocation Plan"
+            )
+
+        if not document.get("cancellation_reason"):
+            errors.append(
+                "cancellation_reason: required for cancelled Plan"
+            )
+
+    errors.extend(evidence_semantic_errors(document))
+    return errors
+
+
+def royalty_receipt_semantic_errors(
+    document: dict[str, Any],
+    known: dict[str, dict[str, dict[str, Any]]],
+) -> list[str]:
+    errors: list[str] = []
+
+    cell_id = document.get("cell_id")
+    plan_ref = document.get("allocation_plan", {})
+    plan_document: dict[str, Any] | None = None
+
+    if isinstance(plan_ref, dict):
+        plan_id = plan_ref.get("allocation_plan_id")
+
+        if (
+            plan_ref.get("resolution_status")
+            == "externally_resolved"
+            and not plan_ref.get("record_ref")
+        ):
+            errors.append(
+                "allocation_plan.record_ref: required for "
+                "externally_resolved Allocation Plan"
+            )
+
+        if (
+            plan_ref.get("resolution_status") == "resolved"
+            and plan_ref.get("source_cell_id") == cell_id
+        ):
+            plan_document = known[
+                "royalty_cell_allocation_plan"
+            ].get(plan_id)
+
+            if plan_document is None:
+                errors.append(
+                    "allocation_plan.allocation_plan_id: locally "
+                    "resolved Allocation Plan was not found"
+                )
+
+    allocated_units = to_decimal(
+        document.get("allocated_units")
+    )
+    settled_units = to_decimal(document.get("settled_units"))
+    remaining_units = to_decimal(
+        document.get("balance_remaining_units")
+    )
+
+    if (
+        allocated_units is not None
+        and settled_units is not None
+        and remaining_units is not None
+    ):
+        if settled_units > allocated_units:
+            errors.append(
+                "settled_units: must not exceed allocated_units"
+            )
+
+        expected_remaining = allocated_units - settled_units
+
+        if expected_remaining != remaining_units:
+            errors.append(
+                "balance_remaining_units: expected "
+                f"{expected_remaining}, got {remaining_units}"
+            )
+
+    if plan_document is not None:
+        line_id = document.get("allocation_line_id")
+        allocations = plan_document.get("allocations", [])
+        matching_line: dict[str, Any] | None = None
+
+        if isinstance(allocations, list):
+            for line in allocations:
+                if (
+                    isinstance(line, dict)
+                    and line.get("allocation_line_id") == line_id
+                ):
+                    matching_line = line
+                    break
+
+        if matching_line is None:
+            errors.append(
+                "allocation_line_id: line was not found in "
+                "Allocation Plan"
+            )
+        else:
+            comparisons = [
+                (
+                    "beneficiary_ref",
+                    document.get("beneficiary_ref"),
+                    matching_line.get("beneficiary_ref"),
+                ),
+                (
+                    "settlement_type",
+                    document.get("settlement_type"),
+                    matching_line.get("settlement_type"),
+                ),
+            ]
+
+            for field, actual, expected in comparisons:
+                if actual != expected:
+                    errors.append(
+                        f"{field}: expected '{expected}' from "
+                        f"Allocation Plan, got '{actual}'"
+                    )
+
+            line_units = to_decimal(
+                matching_line.get("allocated_units")
+            )
+
+            if (
+                allocated_units is not None
+                and line_units is not None
+                and allocated_units != line_units
+            ):
+                errors.append(
+                    "allocated_units: does not match Allocation Plan line"
+                )
+
+            plan_unit = plan_document.get(
+                "source_value_event",
+                {},
+            )
+
+            if isinstance(plan_unit, dict):
+                expected_unit = plan_unit.get("unit")
+
+                if document.get("unit") != expected_unit:
+                    errors.append(
+                        "unit: does not match Allocation Plan unit"
+                    )
+
+    status = document.get("settlement_status")
+    settlement_evidence = document.get("settlement_evidence")
+
+    if status == "settled":
+        if not document.get("settled_at"):
+            errors.append(
+                "settled_at: required for settled Royalty Receipt"
+            )
+
+        if (
+            not isinstance(settlement_evidence, list)
+            or not settlement_evidence
+        ):
+            errors.append(
+                "settlement_evidence: required for settled receipt"
+            )
+
+        if (
+            remaining_units is not None
+            and remaining_units != Decimal("0")
+        ):
+            errors.append(
+                "balance_remaining_units: settled receipt must have "
+                "zero balance"
+            )
+
+    if status == "partially_settled":
+        if (
+            allocated_units is not None
+            and settled_units is not None
+            and not (
+                Decimal("0")
+                < settled_units
+                < allocated_units
+            )
+        ):
+            errors.append(
+                "settled_units: partial settlement requires "
+                "0 < settled_units < allocated_units"
+            )
+
+        if (
+            not isinstance(settlement_evidence, list)
+            or not settlement_evidence
+        ):
+            errors.append(
+                "settlement_evidence: required for partial settlement"
+            )
+
+    if status == "pending":
+        if (
+            settled_units is not None
+            and settled_units != Decimal("0")
+        ):
+            errors.append(
+                "settled_units: pending receipt must have zero "
+                "settled units"
+            )
+
+    if status == "failed" and not document.get("status_reason"):
+        errors.append(
+            "status_reason: required for failed receipt"
+        )
+
+    if status == "held" and not document.get("hold_ref"):
+        errors.append(
+            "hold_ref: required for held receipt"
+        )
+
+    if status == "waived" and not document.get("waiver_ref"):
+        errors.append(
+            "waiver_ref: required for waived receipt"
+        )
+
+    if status == "reversed" and not document.get("reversal_ref"):
+        errors.append(
+            "reversal_ref: required for reversed receipt"
+        )
+
+    errors.extend(
+        evidence_semantic_errors(
+            document,
+            field_name="settlement_evidence",
+        )
+    )
 
     return errors
 
 
 def semantic_errors(
     document: dict[str, Any],
-    known_ids: dict[str, set[str]],
+    known: dict[str, dict[str, dict[str, Any]]],
 ) -> list[str]:
-    """Dispatch semantic validation by record type."""
     record_type = document.get("record_type")
 
     if record_type == "royalty_cell_manifest":
@@ -978,18 +1417,33 @@ def semantic_errors(
         return origin_semantic_errors(document)
 
     if record_type == "royalty_cell_usage_record":
-        return usage_semantic_errors(document, known_ids)
+        return usage_semantic_errors(document, known)
 
     if record_type == "royalty_cell_derivative_record":
-        return derivative_semantic_errors(
-            document,
-            known_ids,
-        )
+        return derivative_semantic_errors(document, known)
 
     if record_type == "royalty_cell_contribution_claim":
-        return contribution_semantic_errors(
+        return contribution_semantic_errors(document, known)
+
+    if (
+        record_type
+        == "royalty_cell_contribution_weight_resolution"
+    ):
+        return weight_resolution_semantic_errors(
             document,
-            known_ids,
+            known,
+        )
+
+    if record_type == "royalty_cell_allocation_plan":
+        return allocation_plan_semantic_errors(
+            document,
+            known,
+        )
+
+    if record_type == "royalty_cell_royalty_receipt":
+        return royalty_receipt_semantic_errors(
+            document,
+            known,
         )
 
     return [
@@ -1000,9 +1454,8 @@ def semantic_errors(
 def validate_document(
     path: Path,
     validators: dict[str, Draft202012Validator],
-    known_ids: dict[str, set[str]],
+    known: dict[str, dict[str, dict[str, Any]]],
 ) -> list[str]:
-    """Return all schema and semantic errors for one example."""
     try:
         document = load_yaml(path)
     except (OSError, ValueError, yaml.YAMLError) as error:
@@ -1011,35 +1464,27 @@ def validate_document(
     errors = schema_errors(document, validators)
 
     if errors:
-        return [
-            f"[schema] {error}"
-            for error in errors
-        ]
+        return [f"[schema] {error}" for error in errors]
 
     return [
         f"[semantic] {error}"
-        for error in semantic_errors(document, known_ids)
+        for error in semantic_errors(document, known)
     ]
 
 
 def print_errors(errors: list[str]) -> None:
-    """Print formatted validation errors."""
     for error in errors:
         print(f"  - {error}")
 
 
 def main() -> int:
-    """Run repository validation."""
     print("=== Royalty Cell Protocol Validation ===")
     print()
 
     try:
         validators = load_validators()
-    except (OSError, ValueError, json.JSONDecodeError) as error:
-        print(f"[fatal] unable to load schemas: {error}")
-        return 1
     except Exception as error:
-        print(f"[fatal] invalid JSON Schema: {error}")
+        print(f"[fatal] unable to load schemas: {error}")
         return 1
 
     for record_type, schema_path in SCHEMA_PATHS.items():
@@ -1061,7 +1506,7 @@ def main() -> int:
         print("[fatal] no fail examples found")
         return 1
 
-    known_ids = collect_known_record_ids(
+    known = collect_known_records(
         pass_files,
         validators,
     )
@@ -1071,13 +1516,12 @@ def main() -> int:
     print("[validate-pass]")
 
     for path in pass_files:
-        relative_path = path.relative_to(ROOT_DIR)
-        print(f"  {relative_path}")
+        print(f"  {path.relative_to(ROOT_DIR)}")
 
         errors = validate_document(
             path,
             validators,
-            known_ids,
+            known,
         )
 
         if errors:
@@ -1093,13 +1537,12 @@ def main() -> int:
     print("[validate-expected-fail]")
 
     for path in fail_files:
-        relative_path = path.relative_to(ROOT_DIR)
-        print(f"  {relative_path}")
+        print(f"  {path.relative_to(ROOT_DIR)}")
 
         errors = validate_document(
             path,
             validators,
-            known_ids,
+            known,
         )
 
         if not errors:
@@ -1120,10 +1563,10 @@ def main() -> int:
 
     print("Known local records:")
 
-    for record_type in sorted(known_ids):
+    for record_type in sorted(known):
         print(f"  [{record_type}]")
 
-        for record_id in sorted(known_ids[record_type]):
+        for record_id in sorted(known[record_type]):
             print(f"    - {record_id}")
 
     print()
