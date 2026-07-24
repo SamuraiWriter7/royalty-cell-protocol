@@ -1,0 +1,355 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://royalty-cell-protocol.example/schemas/royalty-cell-derivative-record.schema.json",
+  "title": "Royalty Cell Derivative Record",
+  "description": "Records a derivative structure or output created from one or more Origin or Derivative records.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "derivative_id",
+    "cell_id",
+    "title",
+    "description",
+    "derivative_type",
+    "derivative_status",
+    "creator_refs",
+    "created_at",
+    "declared_at",
+    "parent_links",
+    "transformation_profile",
+    "allocation_effect",
+    "evidence",
+    "visibility"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.3.0"
+    },
+    "record_type": {
+      "const": "royalty_cell_derivative_record"
+    },
+    "derivative_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-derivative:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "cell_id": {
+      "type": "string",
+      "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5000
+    },
+    "derivative_type": {
+      "type": "string",
+      "enum": [
+        "adaptation",
+        "transformation",
+        "combination",
+        "translation",
+        "summary",
+        "extraction",
+        "extension",
+        "implementation",
+        "distillation",
+        "remix",
+        "other"
+      ]
+    },
+    "derivative_status": {
+      "type": "string",
+      "enum": [
+        "declared",
+        "acknowledged",
+        "contested",
+        "withdrawn",
+        "superseded"
+      ]
+    },
+    "creator_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "declared_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "parent_links": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/parentLink"
+      }
+    },
+    "transformation_profile": {
+      "$ref": "#/$defs/transformationProfile"
+    },
+    "allocation_effect": {
+      "const": "not_yet_determined",
+      "description": "Confirms that the Derivative Record does not itself determine contribution weights or Royalty allocation."
+    },
+    "usage_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "output_refs": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "contest_refs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/reference"
+      }
+    },
+    "superseded_by_ref": {
+      "$ref": "#/$defs/reference"
+    },
+    "status_reason": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "members",
+        "restricted",
+        "inherit"
+      ]
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "reference": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 1000
+    },
+    "contentFingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "value"
+      ],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": [
+            "sha256",
+            "sha512",
+            "blake3",
+            "other"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 512
+        }
+      }
+    },
+    "parentLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_id",
+        "source_record_type",
+        "source_cell_id",
+        "relationship",
+        "dependency_level",
+        "resolution_status"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-(origin|derivative):[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "source_record_type": {
+          "type": "string",
+          "enum": [
+            "origin_record",
+            "derivative_record"
+          ]
+        },
+        "source_cell_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-cell:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "relationship": {
+          "type": "string",
+          "enum": [
+            "adapted_from",
+            "transformed_from",
+            "translated_from",
+            "summarized_from",
+            "implemented_from",
+            "combined_from",
+            "extracted_from",
+            "extended_from",
+            "distilled_from",
+            "remixed_from",
+            "other"
+          ]
+        },
+        "dependency_level": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "supporting",
+            "incidental"
+          ]
+        },
+        "resolution_status": {
+          "type": "string",
+          "enum": [
+            "resolved",
+            "externally_resolved",
+            "unresolved"
+          ]
+        },
+        "record_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      }
+    },
+    "transformationProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operations",
+        "derivative_distance"
+      ],
+      "properties": {
+        "operations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "adaptation",
+              "translation",
+              "summarization",
+              "reorganization",
+              "implementation",
+              "parameterization",
+              "combination",
+              "reduction",
+              "expansion",
+              "stylistic_change",
+              "format_change",
+              "extraction",
+              "distillation",
+              "other"
+            ]
+          }
+        },
+        "derivative_distance": {
+          "type": "string",
+          "enum": [
+            "direct",
+            "near",
+            "moderate",
+            "substantial"
+          ]
+        },
+        "method_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "novelty_notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "evidence_type",
+        "evidence_ref",
+        "recorded_at"
+      ],
+      "properties": {
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^urn:royalty-evidence:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*)+$"
+        },
+        "evidence_type": {
+          "type": "string",
+          "enum": [
+            "content_hash",
+            "signed_statement",
+            "repository_commit",
+            "timestamped_record",
+            "publication_record",
+            "usage_log",
+            "execution_receipt",
+            "audit_record",
+            "external_reference",
+            "other"
+          ]
+        },
+        "evidence_ref": {
+          "$ref": "#/$defs/reference"
+        },
+        "recorded_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "digest": {
+          "$ref": "#/$defs/contentFingerprint"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      }
+    }
+  }
+}
